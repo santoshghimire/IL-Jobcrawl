@@ -3,6 +3,7 @@ import sys
 import codecs
 import scrapy
 import locale
+from scrapy.shell import inspect_response
 
 from jobcrawl.items import JobItem
 
@@ -14,12 +15,12 @@ class AllJobsSpider(scrapy.Spider):
     allowed_domains = ["http://www.alljobs.co.il"]
     start_urls = [
         "http://www.alljobs.co.il/SearchResultsGuest.aspx?" +
-        "page=1&position=&type=&freetxt=&city=&region=", ]
+        "page=1&position=&type=&freetxt=&city=&region=",
+    ]
+
 
     def __init__(self):
-
-        sys.stdout = codecs.getwriter(
-            locale.getpreferredencoding())(sys.stdout)
+        sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
         reload(sys)
         sys.setdefaultencoding('utf-8')
 
@@ -57,6 +58,8 @@ class AllJobsSpider(scrapy.Spider):
                     job_link, self.parse_each_job,
                     dont_filter=True,
                     meta={'job_id': job_id})
+
+        # inspect_response(response,self)
 
     def parse_each_job(self, response):
         """ Parse Each job and extract the data points"""
@@ -99,9 +102,18 @@ class AllJobsSpider(scrapy.Spider):
             company_jobs = ""
 
         try:
-            country_areas = job_item_sel.xpath(
-                './/div[@class="job-content-top-location"]/a/text()'
-            ).extract_first()
+
+
+            location_list_sel =response.xpath("//div[@class='job-regions-box']")
+            if location_list_sel:
+                location_list = location_list_sel.xpath(".//a/text()").extract()
+                country_areas = ", ".join(location_list)
+            else:
+                country_areas = job_item_sel.xpath(
+                    './/div[@class="job-content-top-location"]/a/text()'
+                ).extract_first()
+
+
         except:
             country_areas = ""
 
