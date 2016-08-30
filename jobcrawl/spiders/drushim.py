@@ -13,11 +13,7 @@ class DrushimSpider(scrapy.Spider):
     allowed_domains = ["drushim.co.il"]
     start_urls = (
         'https://www.drushim.co.il/jobs/search',
-        # 'https://www.drushim.co.il/job/11815780/e4078443/',
-        # 'https://www.drushim.co.il/job/11838542/a2330222/',
-        # 'https://www.drushim.co.il/job/11858720/d09149b9/',
-        # 'https://www.drushim.co.il/job/11857561/7d34ad0e/',
-        # 'https://www.drushim.co.il/job/11857561/7d34ad0e/',
+
     )
 
     def __init__(self):
@@ -41,8 +37,8 @@ class DrushimSpider(scrapy.Spider):
         next_pagi = main_content_job_list.xpath(".//a[@class='pager lightBg stdButton']/@href").extract_first()
         # next_pagi = 'https://www.drushim.co.il/jobs/?page=2'
 
-        # if next_pagi:
-        #     yield scrapy.Request(next_pagi, callback=self.parse)
+        if next_pagi:
+            yield scrapy.Request(next_pagi, callback=self.parse)
 
     def parse_each_job(self, response):
         # inspect_response(response,self)
@@ -105,15 +101,7 @@ class DrushimSpider(scrapy.Spider):
             job_description = "\n".join(job_fields_sel_list[1:].xpath("string()").extract())
             job_description = job_description.replace(re.findall(r'\d\d/\d\d/\d\d\d\d\n?(.*)', job_description)[0], "")
 
-            #
-            # job_fields_sel_list = response.xpath("//div[@class='jobFields']/div")
-            # job_description = ""
-            # x = 0
-            # while x < len(job_fields_sel_list)-1:
-            #
-            #     job_description += job_fields_sel_list[x].xpath('string()').extract_first()
-            #     job_description += "\n"
-            #     x += 1
+
         except:
             job_description = ""
 
