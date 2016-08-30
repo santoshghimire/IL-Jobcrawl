@@ -20,13 +20,18 @@ from scrapy import signals
 from scrapy.xlib.pydispatch import dispatcher
 import datetime
 
+today = datetime.date.today()
+today_str = today.strftime("%Y_%m_%d")
+
 pymysql.install_as_MySQLdb()
 
 from jobcrawl import  settings
 
 
 directory = "./IL-jobcrawl-data"
-excel_file_path = directory+"/site_data.xls"
+excel_file_path = "{}/{}_site_data.xls".format(directory, today_str)
+
+
 # excel_file_path = "../site_data.xls"
 
 

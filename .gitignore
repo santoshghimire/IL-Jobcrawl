@@ -92,4 +92,5 @@ ENV/
 
 .idea
 
-site_data.xls
+.IL-jobcrawl-data
+.xls
