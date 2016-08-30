@@ -13,11 +13,7 @@ class DrushimSpider(scrapy.Spider):
     allowed_domains = ["drushim.co.il"]
     start_urls = (
         'https://www.drushim.co.il/jobs/search',
-        # 'https://www.drushim.co.il/job/11815780/e4078443/',
-        # 'https://www.drushim.co.il/job/11838542/a2330222/',
-        # 'https://www.drushim.co.il/job/11858720/d09149b9/',
-        # 'https://www.drushim.co.il/job/11857561/7d34ad0e/',
-        # 'https://www.drushim.co.il/job/11857561/7d34ad0e/',
+
     )
 
     def __init__(self):
@@ -45,7 +41,6 @@ class DrushimSpider(scrapy.Spider):
             yield scrapy.Request(next_pagi, callback=self.parse)
 
     def parse_each_job(self, response):
-    # def parse(self, response):
         # inspect_response(response,self)
 
         job_container = response.xpath("//div[@class='jobContainer']")
@@ -64,7 +59,6 @@ class DrushimSpider(scrapy.Spider):
 
 
         try:
-            # company = job_container.xpath(".//a[@class='companyLink noToggle']/text()").extract_first()
             company = job_container.xpath(".//div[@class='fieldContainer vertical first']/"
                                           "span[@class='fieldTitle']/text()").extract_first()
 
@@ -106,7 +100,6 @@ class DrushimSpider(scrapy.Spider):
         try:
             job_description = "\n".join(job_fields_sel_list[1:].xpath("string()").extract())
             job_description = job_description.replace(re.findall(r'\d\d/\d\d/\d\d\d\d\n?(.*)', job_description)[0], "")
-
 
             #
             # job_fields_sel_list = response.xpath("//div[@class='jobFields']/div")

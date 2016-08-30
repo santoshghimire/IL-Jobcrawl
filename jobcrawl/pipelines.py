@@ -24,14 +24,17 @@ pymysql.install_as_MySQLdb()
 
 from jobcrawl import  settings
 
-excel_file_path = "../../site_data.xls"
+
+directory = "../IL-jobcrawl-data"
+excel_file_path = directory+"/site_data.xls"
 # excel_file_path = "../site_data.xls"
 
 
 class JobscrawlerPipeline(object):
 
     def open_spider(self, spider):
-
+        if not os.path.exists(directory):
+            os.mkdir(directory)
         self.ids_seen = set()
 
         self.sheet_name = spider.name.title()  # name of the sheet for current website
@@ -39,6 +42,7 @@ class JobscrawlerPipeline(object):
         sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
         reload(sys)
         sys.setdefaultencoding('utf-8')
+
 
         if os.path.isfile(excel_file_path):
             """ check if site_data.xls exists we will copy old xls and append to last row"""
@@ -65,7 +69,8 @@ class JobscrawlerPipeline(object):
                 self.sheet.write(0, 8, 'Country_Areas')
                 self.sheet.write(0, 9, 'Job_categories')
                 self.sheet.write(0, 10, 'AllJobs_Job_class')
-                self.sheet.write(0, 11, 'unique_id')
+                self.sheet.write(0, 11, 'Crawl_Date')
+                self.sheet.write(0, 12, 'unique_id')
 
                 self.next_row = self.sheet.last_used_row
 
@@ -88,7 +93,8 @@ class JobscrawlerPipeline(object):
             self.sheet.write(0, 8, 'Country_Areas')
             self.sheet.write(0, 9, 'Job_categories')
             self.sheet.write(0, 10, 'AllJobs_Job_class')
-            self.sheet.write(0, 11, 'unique_id')
+            self.sheet.write(0, 11, 'Crawl_Date')
+            self.sheet.write(0, 12, 'unique_id')
 
             self.next_row = self.sheet.last_used_row
 
@@ -134,6 +140,8 @@ class JobscrawlerPipeline(object):
                 pass
 
     def process_item(self, item, spider):
+        crawl_date = datetime.date.today()
+        crawl_date_str = crawl_date.strftime("%d/%m/%Y")
         if item['Job']['Job_id'] in self.ids_seen:
             raise DropItem("*"*100+"\n"+"Duplicate item found: %s" % item + "\n"+"*"*100)
 
@@ -152,7 +160,8 @@ class JobscrawlerPipeline(object):
             self.sheet.write(self.next_row, 8, item['Job']['Country_Areas'])
             self.sheet.write(self.next_row, 9, item['Job']['Job_categories'])
             self.sheet.write(self.next_row, 10, item['Job']['AllJobs_Job_class'])
-            self.sheet.write(self.next_row, 11, item['Job']['unique_id'])
+            self.sheet.write(self.next_row, 11, crawl_date_str)
+            self.sheet.write(self.next_row, 12, item['Job']['unique_id'])
 
             self.book.save(self.unsorted_temp_site_data_xls)
 

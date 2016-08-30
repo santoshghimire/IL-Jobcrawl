@@ -114,16 +114,6 @@ class AllJobsSpider(scrapy.Spider):
                 ).extract_first()
 
 
-            print("++++++++++++++++++++")
-            print(country_areas)
-            print("++++++++++++++++++++")
-
-
-
-
-
-
-
         except:
             country_areas = ""
 
