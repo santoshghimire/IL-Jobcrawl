@@ -91,3 +91,5 @@ ENV/
 # pycharm
 
 .idea
+
+IL-jobcrawl-data/site_data.xls

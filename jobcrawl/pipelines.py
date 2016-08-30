@@ -25,7 +25,7 @@ pymysql.install_as_MySQLdb()
 from jobcrawl import  settings
 
 
-directory = "../IL-jobcrawl-data"
+directory = "./IL-jobcrawl-data"
 excel_file_path = directory+"/site_data.xls"
 # excel_file_path = "../site_data.xls"
 

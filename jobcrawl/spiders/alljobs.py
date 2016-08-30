@@ -35,7 +35,7 @@ class AllJobsSpider(scrapy.Spider):
         except:
             total_pages = 2000
 
-        for i in range(total_pages):
+        for i in range(1):
             page_link = "http://www.alljobs.co.il/SearchResultsGuest.aspx?page=%s&position=&type=&freetxt=&city=&region=" % str(i + 1)
             yield scrapy.Request(
                 page_link, self.parse_each_page,
