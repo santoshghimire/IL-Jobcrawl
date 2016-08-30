@@ -33,7 +33,7 @@ class JobmasterSpider(scrapy.Spider):
         """
         job_location_links_list = response.xpath("//a[contains(@href,'/check/search.asp?ezor=')]/@href").extract()
 
-        # yield scrapy.Request(response.urljoin(job_location_links_list[-1]), callback=self.parse_each_location,dont_filter=True)
+        yield scrapy.Request(response.urljoin(job_location_links_list[-1]), callback=self.parse_each_location,dont_filter=True)
 
         for location_li in job_location_links_list:
             self.total_locations += 1

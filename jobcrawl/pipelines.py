@@ -19,6 +19,7 @@ from scrapy.exceptions import DropItem
 from scrapy import signals
 from scrapy.xlib.pydispatch import dispatcher
 import datetime
+import clientchanges
 
 today = datetime.date.today()
 today_str = today.strftime("%Y_%m_%d")
@@ -241,6 +242,13 @@ class MySQLPipeline(object):
 
         ))
         spider.log("Item stored in dbSchema: %s %r" % (item['Job']['Job_id'], item))
+
+    def close_spider(self, spider):
+        if spider.name == 'alljobs':
+            clientchanges.ClientChanges()
+
+
+
 
     def handle_error(self, failure, item, spider):
         """Handle occurred on dbSchema interaction."""
