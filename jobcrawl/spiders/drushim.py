@@ -12,8 +12,8 @@ class DrushimSpider(scrapy.Spider):
     name = "drushim"
     allowed_domains = ["drushim.co.il"]
     start_urls = (
-        'https://www.drushim.co.il/jobs/search',
-        # 'https://www.drushim.co.il/job/11815780/e4078443/',
+        # 'https://www.drushim.co.il/jobs/search',
+        'https://www.drushim.co.il/job/11815780/e4078443/',
         # 'https://www.drushim.co.il/job/11838542/a2330222/',
         # 'https://www.drushim.co.il/job/11858720/d09149b9/',
         # 'https://www.drushim.co.il/job/11857561/7d34ad0e/',
@@ -26,26 +26,26 @@ class DrushimSpider(scrapy.Spider):
         reload(sys)
         sys.setdefaultencoding('utf-8')
 
-    def parse(self, response):
-        # inspect_response(response,self)
-
-        main_content_job_list = response.xpath("//div[@id='MainContent_JobList_jobList']")
-        job_container = main_content_job_list.xpath(".//div[@class='jobContainer']")
-
-        job_link_list= job_container.xpath(".//a[@class='fullPage']/@href").extract()
-
-        for job_link in job_link_list:
-
-            yield scrapy.Request(job_link, callback=self.parse_each_job, dont_filter=True)
-
-        next_pagi = main_content_job_list.xpath(".//a[@class='pager lightBg stdButton']/@href").extract_first()
-        # next_pagi = 'https://www.drushim.co.il/jobs/?page=2'
-
-        if next_pagi:
-            yield scrapy.Request(next_pagi, callback=self.parse)
-
-    def parse_each_job(self, response):
     # def parse(self, response):
+    #     # inspect_response(response,self)
+
+    #     main_content_job_list = response.xpath("//div[@id='MainContent_JobList_jobList']")
+    #     job_container = main_content_job_list.xpath(".//div[@class='jobContainer']")
+
+    #     job_link_list= job_container.xpath(".//a[@class='fullPage']/@href").extract()
+
+    #     for job_link in job_link_list:
+
+    #         yield scrapy.Request(job_link, callback=self.parse_each_job, dont_filter=True)
+
+    #     next_pagi = main_content_job_list.xpath(".//a[@class='pager lightBg stdButton']/@href").extract_first()
+    #     # next_pagi = 'https://www.drushim.co.il/jobs/?page=2'
+
+    #     if next_pagi:
+    #         yield scrapy.Request(next_pagi, callback=self.parse)
+
+    # def parse_each_job(self, response):
+    def parse(self, response):
         # inspect_response(response,self)
 
         job_container = response.xpath("//div[@class='jobContainer']")
