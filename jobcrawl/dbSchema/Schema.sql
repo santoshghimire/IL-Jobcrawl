@@ -14,6 +14,7 @@ CREATE TABLE sites_datas(
             Job_categories VARCHAR (255),
             AllJobs_Job_class VARCHAR (255),
             Crawl_Date VARCHAR (20),
-            unique_id VARCHAR (255) PRIMARY KEY
+            unique_id VARCHAR (255),
+            PRIMARY KEY (Crawl_Date,unique_id)
 
 ) DEFAULT CHARSET = utf8;

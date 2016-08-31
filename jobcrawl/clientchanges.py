@@ -56,20 +56,21 @@ class ClientChanges:
     def excel_writer(self):
         """"write to excel file using pandas """
         writer = pd.ExcelWriter(self.excel_file_path)
+        columns = ['Site', 'Company', 'Company_jobs', 'Num_Company_jobs']
         try:
             df_copy = self.df_main.drop_duplicates(['Company'], keep=False)
             try:
                 yesterdays_jobs = df_copy.Crawl_Date == self.yesterday_str
                 df_removed_companies = df_copy[yesterdays_jobs]
                 df_removed_companies = df_removed_companies.sort_values(by=['Site', 'Company'])
-                df_removed_companies.to_excel(writer, index=False, sheet_name='Companies_That_left', encoding='utf-8')
+                df_removed_companies.to_excel(writer, index=False, sheet_name='Companies_That_left', columns=columns, encoding='utf-8')
             except:
                 pass
             try:
                 todays_jobs = df_copy.Crawl_Date == self.today_str
                 df_new_companies = df_copy[todays_jobs]
                 df_new_companies = df_new_companies.sort_values(by=['Site', 'Company'])
-                df_new_companies.to_excel(writer, index=False, sheet_name='New_Company', encoding='utf-8')
+                df_new_companies.to_excel(writer, index=False, sheet_name='New_Company',columns=columns, encoding='utf-8')
             except:
                 pass
         except:
