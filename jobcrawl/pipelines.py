@@ -20,7 +20,7 @@ from scrapy import signals
 from scrapy.xlib.pydispatch import dispatcher
 import datetime
 import clientchanges
-
+from scrapy.mail import MailSender
 today = datetime.date.today()
 today_str = today.strftime("%Y_%m_%d")
 
@@ -246,7 +246,6 @@ class MySQLPipeline(object):
     def close_spider(self, spider):
         if spider.name == 'alljobs':
             clientchanges.ClientChanges()
-
 
 
 

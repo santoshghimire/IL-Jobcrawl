@@ -55,9 +55,10 @@ NEWSPIDER_MODULE = 'jobcrawl.spiders'
 
 # Enable or disable extensions
 # See http://scrapy.readthedocs.org/en/latest/topics/extensions.html
-#EXTENSIONS = {
-#    'scrapy.telnet.TelnetConsole': None,
-#}
+EXTENSIONS = {
+   # 'scrapy.telnet.TelnetConsole': None,
+   'mailer.extensions.TelnetConsole': None,
+}
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
@@ -92,3 +93,14 @@ MYSQL_HOST = 'localhost'
 MYSQL_DBNAME = 'il_sites_datas'
 MYSQL_USER = 'root'
 MYSQL_PASSWORD = 'root'
+
+
+
+STATUSMAILER_RECIPIENTS = []
+STATUSMAILER_COMPRESSION = 'gzip'
+#STATUSMAILER_COMPRESSION = None
+
+MAIL_HOST = 'smtp.gmail.com'
+MAIL_PORT = 587
+MAIL_USER = ''
+MAIL_PASS = ''
