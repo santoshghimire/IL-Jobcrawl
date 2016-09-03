@@ -21,8 +21,8 @@ class ClientChanges:
         self.yesterday_str = self.yesterday.strftime("%d/%m/%Y")
 
         """ For testing purpose will """
-        self.today_str = "03/08/2016"
-        self.yesterday_str = "02/08/2016"
+        self.today_str = "30/08/2016"
+        self.yesterday_str = "29/08/2016"
 
         self.excel_file_path = self.create_file()
         self.df_main = self.read_sql()
