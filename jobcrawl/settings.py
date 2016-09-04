@@ -97,11 +97,12 @@ MYSQL_PASSWORD = 'root'
 # Email Settings
 
 EMAIL_FROM = 'bikeshkawang@mgial.com'
-EMAIL_TO = 'bikeshkawang@gmail.com'
+# EMAIL_TO = 'bikeshkawang@gmail.com'
+EMAIL_TO = 'bikeshkawang@gmail.com, bikeshkawang@yahoo.com'
 # FILE_TO_SEND =''
 SMTP_SERVER = 'smtp.gmail.com'
 SMTP_PORT = 587
 SMTP_USERNAME = 'bikeshkawang@gmail.com'
-SMTP_PASSWORD = 'Password'
+SMTP_PASSWORD = 'password'
 MAIL_SUBJECT = 'Daily client changes List'
 MAIL_BODY = "Please find the attachment"

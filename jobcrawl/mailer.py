@@ -72,7 +72,7 @@ def send_email():
     server = smtplib.SMTP("{}:{}".format(smtp_server, smtp_port))
     server.starttls()
     server.login(username, password)
-    server.sendmail(email_from, email_to, msg.as_string())
+    server.sendmail(email_from, email_to.split(","), msg.as_string())
 
     print('***************************************************')
     print('Email Successfully Sent to {} '.format(email_to))

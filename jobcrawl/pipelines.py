@@ -20,7 +20,7 @@ from scrapy import signals
 from scrapy.xlib.pydispatch import dispatcher
 import datetime
 import clientchanges
-
+from openpyxl import load_workbook
 from mailer import send_email
 
 today = datetime.date.today()
@@ -30,10 +30,12 @@ pymysql.install_as_MySQLdb()
 
 from jobcrawl import  settings
 
+from openpyxl import Workbook
+
+
 
 directory = "./IL-jobcrawl-data"
-excel_file_path = "{}/{}_site_data.xls".format(directory, today_str)
-
+main_excel_file_path = "{}/{}_site_data.xlsx".format(directory, today_str)
 
 # excel_file_path = "../site_data.xls"
 
@@ -43,109 +45,56 @@ class JobscrawlerPipeline(object):
     def open_spider(self, spider):
         if not os.path.exists(directory):
             os.mkdir(directory)
-        self.ids_seen = set()
 
+        self.ids_seen = set()
         self.sheet_name = spider.name.title()  # name of the sheet for current website
-        self.unsorted_temp_site_data_xls = 'unsorted_site_data.xls'  # temporary xls file which contain scraped item
+        self.temp_each_site_excel_file_path = '{}/{}_{}.xls'.format(directory, today_str, self.sheet_name) # temporary xls file which contain scraped item
         sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
         reload(sys)
         sys.setdefaultencoding('utf-8')
 
+        """ Create main excel file with all sheets"""
+        if not os.path.isfile(main_excel_file_path):
+            wb = Workbook()
+            wb.active.title = 'Drushim'
+            wb.create_sheet('Jobmaster')
+            wb.create_sheet('Alljobs')
 
-        if os.path.isfile(excel_file_path):
-            """ check if site_data.xls exists we will copy old xls and append to last row"""
-            self.file_exists = True
-            self.read_old_book = open_workbook(excel_file_path)
-            self.clone_old_book = copy(self.read_old_book)
-            try:
-                """ if  the self.sheet_name for the site exists in site_data.xls exists"""
-                self.sheet_index = self.read_old_book.sheet_names().index(self.sheet_name)
-                self.clone_old_ws = self.clone_old_book.get_sheet(self.sheet_index)
-                self.next_row = self.clone_old_ws.last_used_row
-                self.sheet = self.clone_old_ws
-            except:
-                """ the self.sheet_name  for the site not exists in site_data.xls exists we will create the sheet"""
-                self.sheet = self.clone_old_book.add_sheet(self.sheet_name)
-                self.sheet.write(0, 0, 'Site')
-                self.sheet.write(0, 1, 'Company')
-                self.sheet.write(0, 2, 'Company_jobs')
-                self.sheet.write(0, 3, 'Job_id')
-                self.sheet.write(0, 4, 'Job_title')
-                self.sheet.write(0, 5, 'Job_Description')
-                self.sheet.write(0, 6, 'Job_Post_Date')
-                self.sheet.write(0, 7, 'Job_URL')
-                self.sheet.write(0, 8, 'Country_Areas')
-                self.sheet.write(0, 9, 'Job_categories')
-                self.sheet.write(0, 10, 'AllJobs_Job_class')
-                self.sheet.write(0, 11, 'Crawl_Date')
-                self.sheet.write(0, 12, 'unique_id')
+            wb.save(main_excel_file_path)
 
-                self.next_row = self.sheet.last_used_row
+        """ To create each site's excel file"""
 
-            self.book = self.clone_old_book
-
-
-        else:
-            """ check if site_data.xls exists we will create the excel file and add self.sheet_name of the website"""
-            self.file_exists = False
-            self.book = xlwt.Workbook(encoding='utf-8')
-            self.sheet = self.book.add_sheet(self.sheet_name)
-            self.sheet.write(0, 0, 'Site')
-            self.sheet.write(0, 1, 'Company')
-            self.sheet.write(0, 2, 'Company_jobs')
-            self.sheet.write(0, 3, 'Job_id')
-            self.sheet.write(0, 4, 'Job_title')
-            self.sheet.write(0, 5, 'Job_Description')
-            self.sheet.write(0, 6, 'Job_Post_Date')
-            self.sheet.write(0, 7, 'Job_URL')
-            self.sheet.write(0, 8, 'Country_Areas')
-            self.sheet.write(0, 9, 'Job_categories')
-            self.sheet.write(0, 10, 'AllJobs_Job_class')
-            self.sheet.write(0, 11, 'Crawl_Date')
-            self.sheet.write(0, 12, 'unique_id')
-
-            self.next_row = self.sheet.last_used_row
+        self.file_exists = False
+        self.book = xlwt.Workbook(encoding='utf-8')
+        self.sheet = self.book.add_sheet(self.sheet_name)
+        self.sheet.write(0, 0, 'Site')
+        self.sheet.write(0, 1, 'Company')
+        self.sheet.write(0, 2, 'Company_jobs')
+        self.sheet.write(0, 3, 'Job_id')
+        self.sheet.write(0, 4, 'Job_title')
+        self.sheet.write(0, 5, 'Job_Description')
+        self.sheet.write(0, 6, 'Job_Post_Date')
+        self.sheet.write(0, 7, 'Job_URL')
+        self.sheet.write(0, 8, 'Country_Areas')
+        self.sheet.write(0, 9, 'Job_categories')
+        self.sheet.write(0, 10, 'AllJobs_Job_class')
+        self.sheet.write(0, 11, 'Crawl_Date')
+        self.sheet.write(0, 12, 'unique_id')
+        self.next_row = self.sheet.last_used_row
 
     def close_spider(self, spider):
+        main_book = load_workbook(main_excel_file_path)
+        main_writer = pd.ExcelWriter(main_excel_file_path, engine='openpyxl')
+        main_writer.book = main_book
+        main_writer.sheets = dict((ws.title, ws) for ws in main_book.worksheets)
+        unsorted_xls_df = pd.read_excel(self.temp_each_site_excel_file_path)
+        sorted_xls = unsorted_xls_df.sort_values(by='Company')
+        sorted_xls = sorted_xls.drop_duplicates()
 
-        """ if site_data.xls exists"""
-        if self.file_exists:
-            try:
-                """ Will remove old excel_file_path and
-                save new file which is sorted version of unsorted_temp_site_data_xls"""
+        sorted_xls.to_excel(main_writer, self.sheet_name, index=False)
+        main_writer.save()
 
-                os.remove(excel_file_path)
-                unsorted_xls = open_workbook(self.unsorted_temp_site_data_xls, on_demand=True)
-                sheet_name_list = unsorted_xls.sheet_names()
-                writer = pd.ExcelWriter(excel_file_path)
-                # writer = pd.ExcelWriter()
-                for sheet_name in sheet_name_list:
-                    unsorted_xls_df = pd.read_excel(self.unsorted_temp_site_data_xls, sheetname=sheet_name)
-                    sorted_xls = unsorted_xls_df.sort_values(by='Company')
-                    sorted_xls = sorted_xls.drop_duplicates() # remove duplicates
-                    sorted_xls.to_excel(writer, sheet_name=sheet_name, index=False)
-                writer.save()
-                os.remove(self.unsorted_temp_site_data_xls)
-            except:
-                """ For any reason the pd.ExcelWriter cannot write and save the file
-                    We will just move the unsorted_tem_site_data_xls to excel_file_path"""
-
-                if not os.path.isfile(excel_file_path):
-                    try:
-                        shutil.move(self.unsorted_temp_site_data_xls, excel_file_path)
-                    except:
-                        pass
-
-        else:
-            """ if site_data.xls doesnot exists"""
-            try:
-                unsorted_xls_df = pd.read_excel(self.unsorted_temp_site_data_xls)
-                sorted_xls = unsorted_xls_df.sort_values(by='Company')
-                sorted_xls = sorted_xls.drop_duplicates()
-                sorted_xls.to_excel(excel_file_path, index=False, sheet_name=self.sheet_name)
-                os.remove(self.unsorted_temp_site_data_xls)
-            except:
-                pass
+        os.remove(self.temp_each_site_excel_file_path)
 
     def process_item(self, item, spider):
         crawl_date = datetime.date.today()
@@ -171,7 +120,7 @@ class JobscrawlerPipeline(object):
             self.sheet.write(self.next_row, 11, crawl_date_str)
             self.sheet.write(self.next_row, 12, item['Job']['unique_id'])
 
-            self.book.save(self.unsorted_temp_site_data_xls)
+            self.book.save(self.temp_each_site_excel_file_path)
 
             return item
 
@@ -246,16 +195,30 @@ class MySQLPipeline(object):
         spider.log("Item stored in dbSchema: %s %r" % (item['Job']['Job_id'], item))
 
     def close_spider(self, spider):
-        if spider.name == 'alljobs':
-            clientchanges.ClientChanges()
+        clientchanges.ClientChanges()
+        send_email()
 
+        open('{}/{}-{}.xls'.format(directory, today_str, spider.name.title()), 'a')
+
+        drushim_file = "{}/{}-Drushim.xls".format(directory, today_str)
+        jobmaster_file ="{}/{}-Jobmaster.xls".format(directory, today_str)
+        alljobs_file = "{}/{}-Alljobs.xls".format(directory, today_str)
+
+        """ check if all the excel file for 3 sites exists and proceed"""
+        if os.path.isfile(drushim_file) and os.path.isfile(jobmaster_file) and os.path.isfile(alljobs_file):
+            clientchanges.ClientChanges()
             try:
                 send_email()
+                os.remove(drushim_file)
+                os.remove(jobmaster_file)
+                os.remove(alljobs_file)
             except:
                 print('***************************************************')
                 print('There is a problem sending email check settings.py')
-                print(" Check if you have Turn on access for less secure app \n https://support.google.com/accounts/answer/6010255?hl=en")
+                print(" Check if you have Turn on access for less secure app \n"
+                      " https://support.google.com/accounts/answer/6010255?hl=en")
                 print('***************************************************')
+
 
     def handle_error(self, failure, item, spider):
         """Handle occurred on dbSchema interaction."""
