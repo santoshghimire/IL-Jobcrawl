@@ -43,6 +43,7 @@ main_excel_file_path = "{}/{}_site_data.xlsx".format(directory, today_str)
 class JobscrawlerPipeline(object):
 
     def open_spider(self, spider):
+
         if not os.path.exists(directory):
             os.mkdir(directory)
 
@@ -195,8 +196,7 @@ class MySQLPipeline(object):
         spider.log("Item stored in dbSchema: %s %r" % (item['Job']['Job_id'], item))
 
     def close_spider(self, spider):
-        clientchanges.ClientChanges()
-        send_email()
+
 
         open('{}/{}-{}.xls'.format(directory, today_str, spider.name.title()), 'a')
 
