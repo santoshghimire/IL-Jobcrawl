@@ -2,7 +2,6 @@ import smtplib
 import mimetypes
 from email.mime.multipart import MIMEMultipart
 from email import encoders
-from email.message import Message
 from email.mime.audio import MIMEAudio
 from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage
@@ -65,14 +64,17 @@ def send_email():
         attachment.set_payload(fp.read())
         fp.close()
         encoders.encode_base64(attachment)
-    attachment.add_header("Content-Disposition", "attachment", filename=os.path.basename(file_to_send))
+    attachment.add_header(
+        "Content-Disposition", "attachment",
+        filename=os.path.basename(file_to_send)
+    )
     msg.attach(attachment)
     msg.attach(textpart)
 
     server = smtplib.SMTP("{}:{}".format(smtp_server, smtp_port))
     server.starttls()
     server.login(username, password)
-    server.sendmail(email_from, email_to, msg.as_string())
+    server.sendmail(email_from, email_to.split(","), msg.as_string())
 
     print('***************************************************')
     print('Email Successfully Sent to {} '.format(email_to))

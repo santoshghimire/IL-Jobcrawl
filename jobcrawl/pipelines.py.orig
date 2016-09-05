@@ -196,6 +196,9 @@ class MySQLPipeline(object):
         spider.log("Item stored in dbSchema: %s %r" % (item['Job']['Job_id'], item))
 
     def close_spider(self, spider):
+<<<<<<< HEAD
+        if spider.name == 'alljobs':
+=======
 
 
         open('{}/{}-{}.xls'.format(directory, today_str, spider.name.title()), 'a')
@@ -206,6 +209,7 @@ class MySQLPipeline(object):
 
         """ check if all the excel file for 3 sites exists and proceed"""
         if os.path.isfile(drushim_file) and os.path.isfile(jobmaster_file) and os.path.isfile(alljobs_file):
+>>>>>>> e0ffc419ec3fc831f0fba5e4d09c580a9b3fee54
             clientchanges.ClientChanges()
             try:
                 send_email()
@@ -223,3 +227,4 @@ class MySQLPipeline(object):
     def handle_error(self, failure, item, spider):
         """Handle occurred on dbSchema interaction."""
         self.logger.info("DB Schema Handled")
+

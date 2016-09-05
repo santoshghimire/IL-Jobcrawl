@@ -20,7 +20,7 @@ class ClientChanges:
         self.yesterday = self.today - datetime.timedelta(days=1)
         self.yesterday_str = self.yesterday.strftime("%d/%m/%Y")
 
-        # """ For testing purpose will """
+        """ For testing purpose will """
         # self.today_str = "30/08/2016"
         # self.yesterday_str = "29/08/2016"
 
