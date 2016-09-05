@@ -8,6 +8,7 @@ import locale
 import codecs
 import re
 
+
 class DrushimSpider(scrapy.Spider):
     name = "drushim"
     allowed_domains = ["drushim.co.il"]

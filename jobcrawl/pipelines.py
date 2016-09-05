@@ -21,6 +21,8 @@ from scrapy.xlib.pydispatch import dispatcher
 import datetime
 import clientchanges
 
+from mailer import send_email
+
 today = datetime.date.today()
 today_str = today.strftime("%Y_%m_%d")
 
@@ -246,9 +248,13 @@ class MySQLPipeline(object):
     def close_spider(self, spider):
         if spider.name == 'alljobs':
             clientchanges.ClientChanges()
-
-
-
+            try:
+                send_email()
+            except:
+                print('***************************************************')
+                print('There is a problem sending email check settings.py')
+                print(" Check if you have Turn on access for less secure app \n https://support.google.com/accounts/answer/6010255?hl=en")
+                print('***************************************************')
 
     def handle_error(self, failure, item, spider):
         """Handle occurred on dbSchema interaction."""

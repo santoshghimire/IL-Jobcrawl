@@ -55,9 +55,9 @@ NEWSPIDER_MODULE = 'jobcrawl.spiders'
 
 # Enable or disable extensions
 # See http://scrapy.readthedocs.org/en/latest/topics/extensions.html
-#EXTENSIONS = {
-#    'scrapy.telnet.TelnetConsole': None,
-#}
+# EXTENSIONS = {
+#    # 'scrapy.telnet.TelnetConsole': None,
+# }
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
@@ -92,3 +92,16 @@ MYSQL_HOST = 'localhost'
 MYSQL_DBNAME = 'il_sites_datas'
 MYSQL_USER = 'root'
 MYSQL_PASSWORD = 'root'
+
+
+# Email Settings
+
+EMAIL_FROM = 'bikeshkawang@mgial.com'
+EMAIL_TO = 'bikeshkawang@gmail.com'
+# FILE_TO_SEND =''
+SMTP_SERVER = 'smtp.gmail.com'
+SMTP_PORT = 587
+SMTP_USERNAME = 'bikeshkawang@gmail.com'
+SMTP_PASSWORD = 'Password'
+MAIL_SUBJECT = 'Daily client changes List'
+MAIL_BODY = "Please find the attachment"
