@@ -56,7 +56,8 @@ class JobscrawlerPipeline(object):
 
         """ Create main excel file with all sheets"""
         if not os.path.isfile(main_excel_file_path):
-            wb = Workbook()
+            wb = Workbook(encoding='utf-8')
+            # wb = Workbook()
             wb.active.title = 'Drushim'
             wb.create_sheet('Jobmaster')
             wb.create_sheet('Alljobs')
@@ -196,19 +197,21 @@ class MySQLPipeline(object):
         spider.log("Item stored in dbSchema: %s %r" % (item['Job']['Job_id'], item))
 
     def close_spider(self, spider):
+        # clientchanges.ClientChanges()
+        """ create a ...crawled_complete.xls file for each spider to notify crawling has finished"""
+        open('{}/{}_{}_crawled_complete.xls'.format(directory, today_str, spider.name.title()), 'a')
 
+        drushim_file = "{}/{}_Drushim_crawled_complete.xls".format(directory, today_str)
+        jobmaster_file ="{}/{}_Jobmaster_crawled_complete.xls".format(directory, today_str)
+        alljobs_file = "{}/{}_Alljobs_crawled_complete.xls".format(directory, today_str)
 
-        open('{}/{}-{}.xls'.format(directory, today_str, spider.name.title()), 'a')
-
-        drushim_file = "{}/{}-Drushim.xls".format(directory, today_str)
-        jobmaster_file ="{}/{}-Jobmaster.xls".format(directory, today_str)
-        alljobs_file = "{}/{}-Alljobs.xls".format(directory, today_str)
-
-        """ check if all the excel file for 3 sites exists and proceed"""
+        """ check if all the ...crawled_complete.xls excel file for 3 sites exists and
+        proceed creating client changes xls"""
         if os.path.isfile(drushim_file) and os.path.isfile(jobmaster_file) and os.path.isfile(alljobs_file):
             clientchanges.ClientChanges()
             try:
                 send_email()
+                """After sending email remove the crawled_complete.xls file"""
                 os.remove(drushim_file)
                 os.remove(jobmaster_file)
                 os.remove(alljobs_file)
@@ -218,7 +221,6 @@ class MySQLPipeline(object):
                 print(" Check if you have Turn on access for less secure app \n"
                       " https://support.google.com/accounts/answer/6010255?hl=en")
                 print('***************************************************')
-
 
     def handle_error(self, failure, item, spider):
         """Handle occurred on dbSchema interaction."""
