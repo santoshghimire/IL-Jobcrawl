@@ -16,22 +16,16 @@ smtp_server = settings.SMTP_SERVER
 smtp_port = settings.SMTP_PORT
 username = settings.SMTP_USERNAME
 password = settings.SMTP_PASSWORD
-subject = settings.MAIL_SUBJECT
-body = settings.MAIL_BODY
+# subject = settings.MAIL_SUBJECT
+# body = settings.MAIL_BODY
 
 today = datetime.date.today()
 today_str = today.strftime("%Y_%m_%d")
 
 
-directory = 'daily_competitor_client_changes'
-file_name = '{}_daily_competitor_client_changes.xls'.format(today_str)
-file_to_send = "{}/{}".format(directory, file_name)
-subject = file_name
-body = "Please find the attachment for {}".format(file_name)
-
-
-def send_email():
-
+def send_email(directory, file_name, body):
+    file_to_send = "{}/{}".format(directory, file_name)
+    subject = file_name
     msg = MIMEMultipart()
     msg["From"] = email_from
     msg["To"] = email_to

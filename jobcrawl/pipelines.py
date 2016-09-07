@@ -10,32 +10,25 @@ import locale
 import xlwt
 import codecs
 import pymysql
-import shutil
 import pandas as pd
-from xlutils.copy import copy
-from xlrd import open_workbook
 from twisted.enterprise import adbapi
 from scrapy.exceptions import DropItem
-from scrapy import signals
-from scrapy.xlib.pydispatch import dispatcher
 import datetime
 import clientchanges
 from openpyxl import load_workbook
 from mailer import send_email
+
+from openpyxl import Workbook
 
 today = datetime.date.today()
 today_str = today.strftime("%Y_%m_%d")
 
 pymysql.install_as_MySQLdb()
 
-from jobcrawl import  settings
-
-from openpyxl import Workbook
-
-
 
 directory = "./IL-jobcrawl-data"
-main_excel_file_path = "{}/{}_site_data.xlsx".format(directory, today_str)
+# main_excel_file_path = "{}/{}_site_data.xlsx".format(directory, today_str)
+main_excel_file_path = "{}/{}_Daily-List-Of-Competitor-Jobs.xlsx".format(directory, today_str)
 
 # excel_file_path = "../site_data.xls"
 
@@ -197,6 +190,7 @@ class MySQLPipeline(object):
         spider.log("Item stored in dbSchema: %s %r" % (item['Job']['Job_id'], item))
 
     def close_spider(self, spider):
+        directory = "./IL-jobcrawl-data"
         # clientchanges.ClientChanges()
         """ create a ...crawled_complete.xls file for each spider to notify crawling has finished"""
         open('{}/{}_{}_crawled_complete.xls'.format(directory, today_str, spider.name.title()), 'a')
@@ -210,7 +204,20 @@ class MySQLPipeline(object):
         if os.path.isfile(drushim_file) and os.path.isfile(jobmaster_file) and os.path.isfile(alljobs_file):
             clientchanges.ClientChanges()
             try:
-                send_email()
+                # send email for competitior changes
+                directory = 'daily_competitor_client_changes'
+                file_name = '{}_Daily-Competitor-Client-Change.xls'.format(today_str)
+                body = "Please find the attachment for {}".format(file_name)
+
+                send_email(directory=directory, file_name=file_name, body=body)
+
+                # send email for total site data
+                directory = 'IL-jobcrawl-data'
+                file_name = '{}_Daily-List-Of-Competitor-Jobs.xlsx'.format(today_str)
+                body = "Please find the attachment for {}".format(file_name)
+
+                send_email(directory=directory, file_name=file_name, body=body)
+
                 """After sending email remove the crawled_complete.xls file"""
                 os.remove(drushim_file)
                 os.remove(jobmaster_file)

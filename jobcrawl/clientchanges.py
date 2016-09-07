@@ -34,7 +34,7 @@ class ClientChanges:
         if not os.path.exists(directory_name):
             os.mkdir(directory_name)
 
-        filename = "{}_{}.xls".format(self.today.strftime("%Y_%m_%d"), directory_name)
+        filename = "{}_Daily-Competitor-Client-Change.xls".format(self.today.strftime("%Y_%m_%d"))
         excel_file_path = "{}/{}".format(directory_name, filename)
         return excel_file_path
 
@@ -99,4 +99,3 @@ class ClientChanges:
 #
 # if __name__ =='__main__':
 #     ClientChanges()
-
