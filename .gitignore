@@ -94,3 +94,4 @@ ENV/
 
 IL-jobcrawl-data
 daily_competitor_client_changes
+jobcrawl/settings.py
