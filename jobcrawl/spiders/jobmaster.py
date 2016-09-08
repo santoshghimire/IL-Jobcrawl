@@ -14,7 +14,8 @@ class JobmasterSpider(scrapy.Spider):
     name = "jobmaster"
     allowed_domains = ["http://www.jobmaster.co.il/"]
     start_urls = (
-        'https://www.jobmaster.co.il/code/home/home.asp?sType=mikumMisra',
+        # 'https://www.jobmaster.co.il/code/home/home.asp?sType=mikumMisra',
+        'http://www.jobmaster.co.il/code/check/checkhevra.asp?cs=PLPOTOGSMJTPGJNOMJEBSKRMO',
     )
 
     def __init__(self):
@@ -27,43 +28,44 @@ class JobmasterSpider(scrapy.Spider):
         self.all_jobs_count = 0
         self.each_location_total_jobs = 0
 
+    # def parse(self, response):
+    #     """
+    #     Get all the links for Location
+    #     """
+    #     job_location_links_list = response.xpath("//a[contains(@href,'/check/search.asp?ezor=')]/@href").extract()
+
+    #     # yield scrapy.Request(response.urljoin(job_location_links_list[-1]), callback=self.parse_each_location,dont_filter=True)
+
+    #     for location_li in job_location_links_list:
+    #         self.total_locations += 1
+    #         yield scrapy.Request(response.urljoin(location_li), callback=self.parse_each_location, dont_filter=True)
+
+    # def parse_each_location(self, response):
+
+    #     """ Parse Each location Link and Extract Each job in this location"""
+    #     job_article_id_list = response.xpath("//article[@class='CardStyle JobItem font14 noWrap']/@id").extract()
+
+    #     job_id_list = [re.findall(r'[\d]+', x.strip()) for x in job_article_id_list]
+
+    #     job_id_list = [x[0] for x in job_id_list if x]
+
+    #     if job_id_list:
+    #         for job_id in job_id_list:
+    #             self.each_location_total_jobs += 1
+    #             job_link = "http://www.jobmaster.co.il/code/check/checknum.asp?flagShare={}".format(job_id)
+    #             yield scrapy.Request(job_link, self.parse_each_job,dont_filter=True, meta={'job_id': job_id})
+
+    #     pagi_link_sel_list = response.xpath("//a[@class='paging']")
+
+    #     for pagi_link_sel in pagi_link_sel_list:
+
+    #         nextpagi_text = pagi_link_sel.xpath("text()").extract_first()
+    #         if nextpagi_text == u'\u05d4\u05d1\u05d0 \xbb':
+    #             yield scrapy.Request(response.urljoin(pagi_link_sel.xpath("@href").extract_first()),
+    #                                  self.parse_each_location, dont_filter=True)
+
+    # def parse_each_job(self,response):
     def parse(self, response):
-        """
-        Get all the links for Location
-        """
-        job_location_links_list = response.xpath("//a[contains(@href,'/check/search.asp?ezor=')]/@href").extract()
-
-        # yield scrapy.Request(response.urljoin(job_location_links_list[-1]), callback=self.parse_each_location,dont_filter=True)
-
-        for location_li in job_location_links_list:
-            self.total_locations += 1
-            yield scrapy.Request(response.urljoin(location_li), callback=self.parse_each_location, dont_filter=True)
-
-    def parse_each_location(self, response):
-
-        """ Parse Each location Link and Extract Each job in this location"""
-        job_article_id_list = response.xpath("//article[@class='CardStyle JobItem font14 noWrap']/@id").extract()
-
-        job_id_list = [re.findall(r'[\d]+', x.strip()) for x in job_article_id_list]
-
-        job_id_list = [x[0] for x in job_id_list if x]
-
-        if job_id_list:
-            for job_id in job_id_list:
-                self.each_location_total_jobs += 1
-                job_link = "http://www.jobmaster.co.il/code/check/checknum.asp?flagShare={}".format(job_id)
-                yield scrapy.Request(job_link, self.parse_each_job,dont_filter=True, meta={'job_id': job_id})
-
-        pagi_link_sel_list = response.xpath("//a[@class='paging']")
-
-        for pagi_link_sel in pagi_link_sel_list:
-
-            nextpagi_text = pagi_link_sel.xpath("text()").extract_first()
-            if nextpagi_text == u'\u05d4\u05d1\u05d0 \xbb':
-                yield scrapy.Request(response.urljoin(pagi_link_sel.xpath("@href").extract_first()),
-                                     self.parse_each_location, dont_filter=True)
-
-    def parse_each_job(self,response):
         # inspect_response(response, self)
 
         """ Parse Each job and extract the data points"""
