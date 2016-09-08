@@ -14,9 +14,8 @@ class JobmasterSpider(scrapy.Spider):
     name = "jobmaster"
     allowed_domains = ["http://www.jobmaster.co.il/"]
     start_urls = (
-        # 'https://www.jobmaster.co.il/code/home/home.asp?sType=mikumMisra',
-        # 'http://www.jobmaster.co.il/code/check/checkhevra.asp?cs=PLPOTOGSMJTPGJNOMJEBSKRMO',
-        'http://www.jobmaster.co.il/code/check/search.asp?ezor=42',
+        'https://www.jobmaster.co.il/code/home/home.asp?sType=mikumMisra',
+        # 'http://www.jobmaster.co.il/code/check/search.asp?ezor=42',  # one location only
     )
 
     def __init__(self):
@@ -29,20 +28,19 @@ class JobmasterSpider(scrapy.Spider):
         self.all_jobs_count = 0
         self.each_location_total_jobs = 0
 
-    # def parse(self, response):
-    #     """
-    #     Get all the links for Location
-    #     """
-    #     job_location_links_list = response.xpath("//a[contains(@href,'/check/search.asp?ezor=')]/@href").extract()
-
-    #     # yield scrapy.Request(response.urljoin(job_location_links_list[-1]), callback=self.parse_each_location,dont_filter=True)
-
-    #     for location_li in job_location_links_list:
-    #         self.total_locations += 1
-    #         yield scrapy.Request(response.urljoin(location_li), callback=self.parse_each_location, dont_filter=True)
-
-    # def parse_each_location(self, response):
     def parse(self, response):
+        """
+        Get all the links for Location
+        """
+        job_location_links_list = response.xpath("//a[contains(@href,'/check/search.asp?ezor=')]/@href").extract()
+
+        # yield scrapy.Request(response.urljoin(job_location_links_list[-1]), callback=self.parse_each_location,dont_filter=True)
+
+        for location_li in job_location_links_list:
+            self.total_locations += 1
+            yield scrapy.Request(response.urljoin(location_li), callback=self.parse_each_location, dont_filter=True)
+
+    def parse_each_location(self, response):
 
         """ Parse Each location Link and Extract Each job in this location"""
         job_article_id_list = response.xpath("//article[@class='CardStyle JobItem font14 noWrap']/@id").extract()
