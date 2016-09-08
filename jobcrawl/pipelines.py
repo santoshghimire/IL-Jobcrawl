@@ -198,7 +198,7 @@ class MySQLPipeline(object):
         drushim_file = "{}/{}_Drushim_crawled_complete.xls".format(directory, today_str)
         jobmaster_file ="{}/{}_Jobmaster_crawled_complete.xls".format(directory, today_str)
         alljobs_file = "{}/{}_Alljobs_crawled_complete.xls".format(directory, today_str)
-
+        clientchanges.ClientChanges()
         """ check if all the ...crawled_complete.xls excel file for 3 sites exists and
         proceed creating client changes xls"""
         if os.path.isfile(drushim_file) and os.path.isfile(jobmaster_file) and os.path.isfile(alljobs_file):
