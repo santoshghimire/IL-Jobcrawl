@@ -90,6 +90,7 @@ ITEM_PIPELINES = {
 
 MYSQL_HOST = 'localhost'
 MYSQL_DBNAME = 'il_sites_datas'
+# MYSQL_DBNAME = 'arab'
 MYSQL_USER = 'root'
 MYSQL_PASSWORD = 'root'
 
@@ -98,7 +99,7 @@ MYSQL_PASSWORD = 'root'
 
 EMAIL_FROM = 'santosh.ghimire33@gmail.com'
 # EMAIL_TO = 'bikeshkawang@gmail.com'
-EMAIL_TO = 'santosh.ghimire33@gmail.com, Dan+JobnetDaily@AdWorks.co.il'
+EMAIL_TO = 'santosh.ghimire33@gmail.com, Dan+JobnetDaily@AdWorks.co.il,bikeshkawang@gmail.com'
 # EMAIL_TO = 'santosh.ghimire33@gmail.com, santoshghimire@gatech.edu'
 # FILE_TO_SEND =''
 SMTP_SERVER = 'smtp.gmail.com'

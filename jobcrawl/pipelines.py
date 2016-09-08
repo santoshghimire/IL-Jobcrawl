@@ -155,7 +155,7 @@ class MySQLPipeline(object):
         crawl_date_str = crawl_date.strftime("%d/%m/%Y")
 
         conn.execute("""
-            INSERT INTO sites_datas (
+            INSERT INTO sites_datas(
             Site,
             Company,
             Company_jobs,
@@ -190,6 +190,8 @@ class MySQLPipeline(object):
         spider.log("Item stored in dbSchema: %s %r" % (item['Job']['Job_id'], item))
 
     def close_spider(self, spider):
+        # clientchanges.ClientChanges()
+
         directory = "./IL-jobcrawl-data"
         # clientchanges.ClientChanges()
         """ create a ...crawled_complete.xls file for each spider to notify crawling has finished"""
