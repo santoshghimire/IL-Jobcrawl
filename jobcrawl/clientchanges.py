@@ -61,7 +61,7 @@ class ClientChanges:
         try:
             df_main = self.df_main
             """ Count all the occurence of Company"""
-            df_main['Num_Company_jobs'] = df_main.groupby('Company')['Company'].transform('count')
+            df_main['Num_Company_jobs'] = df_main.groupby(['Site', 'Company'])['Company'].transform('count')
 
             """ Crawled Yesterday"""
             yesterday_df = df_main[df_main['Crawl_Date'] == self.yesterday_str]
