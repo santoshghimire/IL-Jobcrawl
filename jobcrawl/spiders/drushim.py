@@ -29,7 +29,7 @@ class DrushimSpider(scrapy.Spider):
         main_content_job_list = response.xpath("//div[@id='MainContent_JobList_jobList']")
         job_container = main_content_job_list.xpath(".//div[@class='jobContainer']")
 
-        job_link_list= job_container.xpath(".//a[@class='fullPage']/@href").extract()
+        job_link_list = job_container.xpath(".//a[@class='fullPage']/@href").extract()
 
         for job_link in job_link_list:
 
@@ -37,12 +37,17 @@ class DrushimSpider(scrapy.Spider):
 
         next_pagi = main_content_job_list.xpath(".//a[@class='pager lightBg stdButton']/@href").extract_first()
         # next_pagi = 'https://www.drushim.co.il/jobs/?page=2'
-
+        #
         if next_pagi:
             yield scrapy.Request(next_pagi, callback=self.parse)
 
     def parse_each_job(self, response):
         # inspect_response(response,self)
+        if response.status != 200:
+            self.logger.error("{}\n ERROR Code {}: {} \n {}".format("*"*30, response.status, response.url, "*"*30))
+        else:
+            self.logger.info("{}\n  Status Code {} OK: {} \n {}".format("*"*30, response.status, response.url, "*"*30))
+
 
         job_container = response.xpath("//div[@class='jobContainer']")
         job_fields_sel_list = response.xpath("//div[@class='jobFields']/*")

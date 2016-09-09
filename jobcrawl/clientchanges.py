@@ -35,7 +35,7 @@ class ClientChanges:
             os.mkdir(directory_name)
 
         filename = "{}_Daily-Competitor-Client-Change.xls".format(self.today.strftime("%Y_%m_%d"))
-        excel_file_path = "{}/{}".format(directory_name, filename)
+        excel_file_path = "./{}/{}".format(directory_name, filename)
         return excel_file_path
 
     def read_sql(self):
@@ -60,33 +60,34 @@ class ClientChanges:
         columns = ['Site', 'Company', 'Company_jobs', 'Num_Company_jobs']
         try:
             df_main = self.df_main
-            """ Count all the occurence of Company"""
-            df_main['Num_Company_jobs'] = df_main.groupby(['Site', 'Company'])['Company'].transform('count')
+            """Groupby site,company and crawl_date and transform total number of jobs on particualr crawl
+            date for the each company of the each sites"""
 
-            """ Crawled Yesterday"""
-            yesterday_df = df_main[df_main['Crawl_Date'] == self.yesterday_str]
-            yesterday_df = yesterday_df.drop_duplicates('Company')  # drop duplicates company from yesterday and keep 1
+            df_main['Num_Company_jobs'] = df_main.groupby(['Site', 'Company', 'Crawl_Date'])['unique_id'].transform(
+                'count')
 
-            """ Crawled Today"""
-            today_df = df_main[df_main['Crawl_Date'] == self.today_str]
-            today_df = today_df.drop_duplicates('Company')  # drop duplicates company and just keep one
+            """ Drop duplicates companies for each site on each crawl date"""
 
-            """ Merge both crawled today and crawled yesterday """
-            df_merge = pd.concat([today_df, yesterday_df])
-            """ Again drop duplicates companies and keep none of them
-            if they are present in crawled today and crawled yesterday"""
-            df_merge = df_merge.drop_duplicates(['Company'], keep=False)
+            df_main = df_main.drop_duplicates(subset=['Site', 'Company', 'Crawl_Date'])
 
-            """ After Droping duplicates  remaining companys are either crawled yesterday or crawled today"""
+            """ count the number of Crawl_Date for each Sites's Company and transform value to Site's Company
+                Same as droping duplicates"""
+            df_main['crawl_date_count'] = df_main.groupby(['Site', 'Company'])['unique_id'].transform('count')
 
-            """ Crawled today which were not in crawled yesterday are new companies"""
-            df_new_companies = df_merge[df_merge['Crawl_Date'] == self.today_str]
+            """If crawl_date_count is 2 that's mean it was crawled yesterday and today so we are not intrested on this
+
+                we are only instrested in crawl date count  equal to 1
+            """
+
+            df_main = df_main[df_main.crawl_date_count == 1]
+
+            df_new_companies = df_main[df_main.Crawl_Date == self.today_str]
+            df_removed_companies = df_main[df_main.Crawl_Date == self.yesterday_str]
+
             df_new_companies = df_new_companies.sort_values(by=['Site', 'Company'])
             df_new_companies.to_excel(writer, index=False, sheet_name='New_Company', columns=columns,
                                       encoding='utf-8')
 
-            """Crawled yesterday but not present in crawled today are removed companies"""
-            df_removed_companies = df_merge[df_merge['Crawl_Date'] == self.yesterday_str]
             df_removed_companies = df_removed_companies.sort_values(by=['Site', 'Company'])
             df_removed_companies.to_excel(writer, index=False, sheet_name='Companies_That_left', columns=columns, encoding='utf-8')
 
