@@ -67,6 +67,12 @@ class JobmasterSpider(scrapy.Spider):
     def parse_each_job(self,response):
         # inspect_response(response, self)
 
+        if response.status != 200:
+            self.logger.error("{}\n ERROR Code {}: {} \n {}".format("*" * 30, response.status, response.url, "*" * 30))
+        else:
+            self.logger.info(
+                "{}\n  Status Code {} OK: {} \n {}".format("*" * 30, response.status, response.url, "*" * 30))
+
         """ Parse Each job and extract the data points"""
         job_item_sel = response.xpath("//div[@class='JobItemRight']")
         all_child_elem_job_item = job_item_sel.xpath("./*")

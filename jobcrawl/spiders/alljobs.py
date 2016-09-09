@@ -44,6 +44,12 @@ class AllJobsSpider(scrapy.Spider):
 
     def parse_each_page(self, response):
 
+        if response.status != 200:
+            self.logger.error("{}\n ERROR Code {}: {} \n {}".format("*" * 30, response.status, response.url, "*" * 30))
+        else:
+            self.logger.info(
+                "{}\n  Status Code {} OK: {} \n {}".format("*" * 30, response.status, response.url, "*" * 30))
+
         container_id_list = response.xpath(
             "//div[@class='open-board']/@id").extract()
 

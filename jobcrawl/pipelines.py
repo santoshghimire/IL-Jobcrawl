@@ -57,6 +57,7 @@ class JobscrawlerPipeline(object):
 
             wb.save(main_excel_file_path)
 
+
         """ To create each site's excel file"""
 
         self.file_exists = False
@@ -78,18 +79,21 @@ class JobscrawlerPipeline(object):
         self.next_row = self.sheet.last_used_row
 
     def close_spider(self, spider):
-        main_book = load_workbook(main_excel_file_path)
-        main_writer = pd.ExcelWriter(main_excel_file_path, engine='openpyxl')
-        main_writer.book = main_book
-        main_writer.sheets = dict((ws.title, ws) for ws in main_book.worksheets)
-        unsorted_xls_df = pd.read_excel(self.temp_each_site_excel_file_path)
-        sorted_xls = unsorted_xls_df.sort_values(by='Company')
-        sorted_xls = sorted_xls.drop_duplicates()
+        try:
+            main_book = load_workbook(main_excel_file_path)
+            main_writer = pd.ExcelWriter(main_excel_file_path, engine='openpyxl')
+            main_writer.book = main_book
+            main_writer.sheets = dict((ws.title, ws) for ws in main_book.worksheets)
+            unsorted_xls_df = pd.read_excel(self.temp_each_site_excel_file_path)
+            sorted_xls = unsorted_xls_df.sort_values(by='Company')
+            sorted_xls = sorted_xls.drop_duplicates()
 
-        sorted_xls.to_excel(main_writer, self.sheet_name, index=False)
-        main_writer.save()
+            sorted_xls.to_excel(main_writer, self.sheet_name, index=False)
+            main_writer.save()
 
-        os.remove(self.temp_each_site_excel_file_path)
+            os.remove(self.temp_each_site_excel_file_path)
+        except:
+            spider.log("openpyxl BadZipfile ERROR Dosen't effect our automation")
 
     def process_item(self, item, spider):
         crawl_date = datetime.date.today()
