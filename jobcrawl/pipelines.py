@@ -59,7 +59,6 @@ class JobscrawlerPipeline(object):
 
 
         """ To create each site's excel file"""
-
         self.file_exists = False
         self.book = xlwt.Workbook(encoding='utf-8')
         self.sheet = self.book.add_sheet(self.sheet_name)
@@ -90,10 +89,32 @@ class JobscrawlerPipeline(object):
 
             sorted_xls.to_excel(main_writer, self.sheet_name, index=False)
             main_writer.save()
-
             os.remove(self.temp_each_site_excel_file_path)
         except:
             spider.log("openpyxl BadZipfile ERROR Dosen't effect our automation")
+
+        directory = './IL-jobcrawl-data'
+        open('{}/{}_{}_data_transfer_complete.xls'.format(directory, today_str, spider.name.title()), 'a')
+
+
+        drushim_file = '{}/{}_{}_data_transfer_complete.xls'.format(directory, today_str, 'Drushim')
+        alljobs_file = '{}/{}_{}_data_transfer_complete.xls'.format(directory, today_str, 'Alljobs')
+        jobmaster_file = '{}/{}_{}_data_transfer_complete.xls'.format(directory, today_str, 'Jobmaster')
+
+        """ check if all  crawled complete for all sites excel file for 3 sites exists and
+        proceed creating client changes xls"""
+        if os.path.isfile(drushim_file) and os.path.isfile(jobmaster_file) and os.path.isfile(alljobs_file):
+
+            os.remove(drushim_file)
+            os.remove(alljobs_file)
+            os.remove(jobmaster_file)
+
+            # send email for total site data
+            directory = 'IL-jobcrawl-data'
+            file_name = '{}_Daily-List-Of-Competitor-Jobs.xlsx'.format(today_str)
+            body = "Please find the attachment for {}".format(file_name)
+
+            send_email(directory=directory, file_name=file_name, body=body)
 
     def process_item(self, item, spider):
         crawl_date = datetime.date.today()
@@ -216,12 +237,12 @@ class MySQLPipeline(object):
 
                 send_email(directory=directory, file_name=file_name, body=body)
 
-                # send email for total site data
-                directory = 'IL-jobcrawl-data'
-                file_name = '{}_Daily-List-Of-Competitor-Jobs.xlsx'.format(today_str)
-                body = "Please find the attachment for {}".format(file_name)
-
-                send_email(directory=directory, file_name=file_name, body=body)
+                # # send email for total site data
+                # directory = 'IL-jobcrawl-data'
+                # file_name = '{}_Daily-List-Of-Competitor-Jobs.xlsx'.format(today_str)
+                # body = "Please find the attachment for {}".format(file_name)
+                #
+                # send_email(directory=directory, file_name=file_name, body=body)
 
                 """After sending email remove the crawled_complete.xls file"""
                 os.remove(drushim_file)
