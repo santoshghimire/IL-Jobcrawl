@@ -5,7 +5,6 @@ import locale
 from xlrd import open_workbook
 from openpyxl import load_workbook
 
-from scrapy.xlib.pydispatch import dispatcher
 from scrapy import signals
 import pandas as pd
 import datetime
