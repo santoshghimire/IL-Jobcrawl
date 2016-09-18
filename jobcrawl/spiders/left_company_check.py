@@ -1,39 +1,41 @@
-import re
 import sys
 import codecs
 import scrapy
 import locale
 from xlrd import open_workbook
-from openpyxl import load_workbook,Workbook
+from openpyxl import load_workbook
 
 from scrapy.xlib.pydispatch import dispatcher
 from scrapy import signals
 import pandas as pd
 import datetime
 
-from scrapy.shell import inspect_response
-
-
 
 today = datetime.date.today()
 today_str = today.strftime("%Y_%m_%d")
+
 
 class LeftCompany(scrapy.Spider):
     """ Spider to scrape job information from site http://www.alljobs.co.il """
 
     name = "left"
-    allowed_domains = ["jobmaster.co.il","drushim.co.il","alljobs.co.il"]
+    allowed_domains = ["jobmaster.co.il", "drushim.co.il", "alljobs.co.il"]
 
     start_urls = []
     excel_path = 'daily_competitor_client_changes/{}_Daily-Competitor-Client-Change.xlsx'.format(today_str)
 
     def __init__(self):
 
-        dispatcher.connect(self.spider_closed,signals.spider_closed)
+        # dispatcher.connect(self.spider_closed,signals.spider_closed)
         sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
         reload(sys)
         sys.setdefaultencoding('utf-8')
 
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = super(LeftCompany, cls).from_crawler(crawler, *args, **kwargs)
+        crawler.signals.connect(spider.spider_closed, signals.spider_opened)
+        return spider
 
     def spider_closed(self,spider):
 
