@@ -1,0 +1,20 @@
+1 site at a time
+1000 pages
+16 pages in the same time
+63 interations
+1 min
+5Mins or better
+15Min = 3 sites
+Quick scrape = less errors
+less changes
+97%
+
+
+Scraping is taking an insane amount of time.
+
+Tasks:
+1) Minimize the scraping time to 5 minutes or better.
+2) Run scraping one at a time.
+3) for removed companies - after you create the list, go over the list automaticly, and check if it is actually removed, if not then erase it from the removed list
+4)  for the new companies, compare not 1 day back but 3-7 days back. new company, is one that didn't exist for the past 5 days
+5) (optional) maybe do a double scrape, run it twice
