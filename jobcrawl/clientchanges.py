@@ -20,9 +20,14 @@ class ClientChanges:
         self.yesterday = self.today - datetime.timedelta(days=1)
         self.yesterday_str = self.yesterday.strftime("%d/%m/%Y")
 
+        self.one_week = self.today - datetime.timedelta(days=7)
+        self.one_week_str = self.one_week.strftime("%d/%m/%Y")
+
         """ For testing purpose will """
-        # self.today_str = "06/09/2016"
-        # self.yesterday_str = "05/09/2016"
+        # self.today_str = "15/09/2016"
+        # self.yesterday_str = "08/09/2016"
+        # self.one_week_str = "07/09/2016"
+
 
         self.excel_file_path = self.create_file()
         self.df_main = self.read_sql()
@@ -34,7 +39,7 @@ class ClientChanges:
         if not os.path.exists(directory_name):
             os.mkdir(directory_name)
 
-        filename = "{}_Daily-Competitor-Client-Change.xls".format(self.today.strftime("%Y_%m_%d"))
+        filename = "{}_Daily-Competitor-Client-Change.xlsx".format(self.today.strftime("%Y_%m_%d"))
         excel_file_path = "./{}/{}".format(directory_name, filename)
         return excel_file_path
 
@@ -47,10 +52,10 @@ class ClientChanges:
 
         sql = """SELECT Site,Company, Company_jobs,Crawl_Date,Job_Post_Date,unique_id
                                      FROM sites_datas
-                                     WHERE Crawl_Date in (%(today)s,%(yesterday)s)
+                                     WHERE Crawl_Date BETWEEN %(one_week)s AND %(today)s
             """
         df_main = pd.read_sql(sql, conn, params={
-            'today': self.today_str, 'yesterday': self.yesterday_str})
+             'one_week': self.one_week_str, 'today': self.today_str})
 
         return df_main
 

@@ -4,6 +4,14 @@
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
+
+from twisted.internet import reactor, defer
+from scrapy.crawler import CrawlerRunner
+from scrapy.utils.log import configure_logging
+from scrapy.crawler import CrawlerProcess
+from scrapy.conf import settings
+import subprocess
+
 import os
 import sys
 import locale
@@ -17,6 +25,13 @@ import datetime
 import clientchanges
 from openpyxl import load_workbook
 from mailer import send_email
+from scrapy.crawler import CrawlerProcess
+
+from spiders.left_company_check import LeftCompany
+from twisted.internet import reactor
+import scrapy
+from scrapy.crawler import CrawlerRunner
+from scrapy.utils.log import configure_logging
 
 from openpyxl import Workbook
 
@@ -82,6 +97,7 @@ class JobscrawlerPipeline(object):
             main_book = load_workbook(main_excel_file_path)
             main_writer = pd.ExcelWriter(main_excel_file_path, engine='openpyxl')
             main_writer.book = main_book
+
             main_writer.sheets = dict((ws.title, ws) for ws in main_book.worksheets)
             unsorted_xls_df = pd.read_excel(self.temp_each_site_excel_file_path)
             sorted_xls = unsorted_xls_df.sort_values(by='Company')
@@ -215,7 +231,16 @@ class MySQLPipeline(object):
         spider.log("Item stored in dbSchema: %s %r" % (item['Job']['Job_id'], item))
 
     def close_spider(self, spider):
+
         # clientchanges.ClientChanges()
+
+        # subprocess.Popen(["scrapy", "crawl", "left"])
+
+        # os.system('left_companies.py')
+
+        # execfile("/Users/BIKESHKAWAN/Development/phunka/GitHub/IL-Jobcrawl/jobcrawl/left_companies.py")
+        # subprocess.call("left_companies.py", shell=True)
+        # subprocess.call(["scrapy", "crawl", "left"])
 
         directory = "./IL-jobcrawl-data"
         # clientchanges.ClientChanges()
@@ -229,20 +254,19 @@ class MySQLPipeline(object):
         proceed creating client changes xls"""
         if os.path.isfile(drushim_file) and os.path.isfile(jobmaster_file) and os.path.isfile(alljobs_file):
             clientchanges.ClientChanges()
+
+
+
+
             try:
+
                 # send email for competitior changes
                 directory = 'daily_competitor_client_changes'
-                file_name = '{}_Daily-Competitor-Client-Change.xls'.format(today_str)
+                file_name = '{}_Daily-Competitor-Client-Change.xlsx'.format(today_str)
                 body = "Please find the attachment for {}".format(file_name)
 
                 send_email(directory=directory, file_name=file_name, body=body)
 
-                # # send email for total site data
-                # directory = 'IL-jobcrawl-data'
-                # file_name = '{}_Daily-List-Of-Competitor-Jobs.xlsx'.format(today_str)
-                # body = "Please find the attachment for {}".format(file_name)
-                #
-                # send_email(directory=directory, file_name=file_name, body=body)
 
                 """After sending email remove the crawled_complete.xls file"""
                 os.remove(drushim_file)
@@ -258,3 +282,4 @@ class MySQLPipeline(object):
     def handle_error(self, failure, item, spider):
         """Handle occurred on dbSchema interaction."""
         self.logger.info("DB Schema Handled")
+
