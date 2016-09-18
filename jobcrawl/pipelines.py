@@ -254,19 +254,13 @@ class MySQLPipeline(object):
         proceed creating client changes xls"""
         if os.path.isfile(drushim_file) and os.path.isfile(jobmaster_file) and os.path.isfile(alljobs_file):
             clientchanges.ClientChanges()
-
-
-
-
             try:
-
                 # send email for competitior changes
                 directory = 'daily_competitor_client_changes'
                 file_name = '{}_Daily-Competitor-Client-Change.xlsx'.format(today_str)
                 body = "Please find the attachment for {}".format(file_name)
 
                 send_email(directory=directory, file_name=file_name, body=body)
-
 
                 """After sending email remove the crawled_complete.xls file"""
                 os.remove(drushim_file)
@@ -282,4 +276,3 @@ class MySQLPipeline(object):
     def handle_error(self, failure, item, spider):
         """Handle occurred on dbSchema interaction."""
         self.logger.info("DB Schema Handled")
-

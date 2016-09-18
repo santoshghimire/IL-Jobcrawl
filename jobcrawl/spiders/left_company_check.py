@@ -81,6 +81,3 @@ class LeftCompany(scrapy.Spider):
         else:
 
             print ("No job", response.url)
-
-
-
