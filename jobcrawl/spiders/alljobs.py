@@ -6,7 +6,6 @@ import locale
 from scrapy.shell import inspect_response
 from jobcrawl.items import JobItem
 
-
 class AllJobsSpider(scrapy.Spider):
     """ Spider to scrape job information from site http://www.alljobs.co.il """
 
@@ -19,6 +18,8 @@ class AllJobsSpider(scrapy.Spider):
 
 
     def __init__(self):
+
+
         sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
         reload(sys)
         sys.setdefaultencoding('utf-8')
