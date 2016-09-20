@@ -8,13 +8,22 @@ from jobcrawl.spiders.left_company_check import LeftCompany
 from scrapy.utils.project import get_project_settings
 from twisted.internet import reactor, defer
 from scrapy.crawler import CrawlerRunner
+import time
+import logging
 from scrapy.utils.log import configure_logging
 
-# configure_logging()
-configure_logging({'LOG_FORMAT': '%(levelname)s: %(message)s'})
+configure_logging(install_root_handler=False)
+logging.basicConfig(
+    filename="%s_%s.txt" % ('scrapy_log_output', time.strftime('%Y-%m-%d')),
+    format='%(levelname)s: %(message)s',
+    level=logging.INFO
+)
 
-runner = CrawlerRunner()
-runner.settings = get_project_settings()
+settings = get_project_settings()
+
+runner = CrawlerRunner(settings)
+
+
 @defer.inlineCallbacks
 def crawl():
     yield runner.crawl(AllJobsSpider)
