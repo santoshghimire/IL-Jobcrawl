@@ -14,7 +14,7 @@ class JobmasterSpider(scrapy.Spider):
     name = "jobmaster"
     allowed_domains = ["http://www.jobmaster.co.il/"]
     start_urls = (
-        'https://www.jobmaster.co.il/code/home/home.asp?sType=mikumMisra',
+        'http://www.jobmaster.co.il/code/home/home.asp?sType=mikumMisra',
         # 'http://www.jobmaster.co.il/code/check/search.asp?ezor=42',  # one location only
     )
 
