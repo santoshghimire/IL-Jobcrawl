@@ -33,11 +33,11 @@ class JobmasterSpider(scrapy.Spider):
         Get all the links for Location
         """
         job_location_links_list = response.xpath("//a[contains(@href,'/check/search.asp?ezor=')]/@href").extract()
-        # yield scrapy.Request(response.urljoin(job_location_links_list[-1]), callback=self.parse_each_location,dont_filter=True)
+        yield scrapy.Request(response.urljoin(job_location_links_list[-1]), callback=self.parse_each_location,dont_filter=True)
 
-        for location_li in job_location_links_list:
-            self.total_locations += 1
-            yield scrapy.Request(response.urljoin(location_li), callback=self.parse_each_location, dont_filter=True)
+        # for location_li in job_location_links_list:
+        #     self.total_locations += 1
+        #     yield scrapy.Request(response.urljoin(location_li), callback=self.parse_each_location, dont_filter=True)
 
     def parse_each_location(self, response):
 
@@ -56,12 +56,12 @@ class JobmasterSpider(scrapy.Spider):
 
         pagi_link_sel_list = response.xpath("//a[@class='paging']")
 
-        for pagi_link_sel in pagi_link_sel_list:
-
-            nextpagi_text = pagi_link_sel.xpath("text()").extract_first()
-            if nextpagi_text == u'\u05d4\u05d1\u05d0 \xbb':
-                yield scrapy.Request(response.urljoin(pagi_link_sel.xpath("@href").extract_first()),
-                                     self.parse_each_location, dont_filter=True)
+        # for pagi_link_sel in pagi_link_sel_list:
+        #
+        #     nextpagi_text = pagi_link_sel.xpath("text()").extract_first()
+        #     if nextpagi_text == u'\u05d4\u05d1\u05d0 \xbb':
+        #         yield scrapy.Request(response.urljoin(pagi_link_sel.xpath("@href").extract_first()),
+        #                              self.parse_each_location, dont_filter=True)
 
     def parse_each_job(self,response):
         # inspect_response(response, self)

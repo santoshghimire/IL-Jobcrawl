@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from scrapy.shell import  inspect_response
+from scrapy.shell import inspect_response
 from jobcrawl.items import JobItem
 
 import sys
@@ -30,7 +30,7 @@ class DrushimSpider(scrapy.Spider):
         job_container = main_content_job_list.xpath(".//div[@class='jobContainer']")
 
         job_link_list = job_container.xpath(".//a[@class='fullPage']/@href").extract()
-        # job_link_list = job_link_list[1:2]
+        job_link_list = job_link_list[1:2]
 
         for job_link in job_link_list:
 
@@ -39,8 +39,8 @@ class DrushimSpider(scrapy.Spider):
         next_pagi = main_content_job_list.xpath(".//a[@class='pager lightBg stdButton']/@href").extract_first()
         # next_pagi = 'https://www.drushim.co.il/jobs/?page=2'
 
-        if next_pagi:
-            yield scrapy.Request(next_pagi, callback=self.parse)
+        # if next_pagi:
+        #     yield scrapy.Request(next_pagi, callback=self.parse)
 
     def parse_each_job(self, response):
         # inspect_response(response,self)

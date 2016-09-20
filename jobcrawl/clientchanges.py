@@ -10,6 +10,7 @@ from jobcrawl import settings
 
 class ClientChanges:
 
+
     def __init__(self):
         sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
         reload(sys)

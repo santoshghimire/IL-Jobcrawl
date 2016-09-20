@@ -100,13 +100,13 @@ MYSQL_PASSWORD = 'root'
 EMAIL_FROM = 'santosh.ghimire33@gmail.com'
 # EMAIL_TO = 'bikeshkawang@gmail.com'
 # EMAIL_TO = 'santosh.ghimire33@gmail.com, Dan+JobnetDaily@AdWorks.co.il,bikeshkawang@gmail.com'
-EMAIL_TO = 'santosh.ghimire33@gmail.com, bikeshkawang@gmail.com'
-# EMAIL_TO = 'bikeshkawang@gmail.com'
+# EMAIL_TO = 'santosh.ghimire33@gmail.com, bikeshkawang@gmail.com'
+EMAIL_TO = 'bikeshkawang@gmail.com'
 # FILE_TO_SEND =''
 SMTP_SERVER = 'smtp.gmail.com'
 SMTP_PORT = 587
 SMTP_USERNAME = 'bikeshkawang@gmail.com'
-SMTP_PASSWORD = ''
+SMTP_PASSWORD = 'df'
 # MAIL_SUBJECT = 'Daily client changes List'
 # MAIL_BODY = "Please find the attachment"
 

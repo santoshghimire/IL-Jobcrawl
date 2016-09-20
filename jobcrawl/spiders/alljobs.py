@@ -6,6 +6,7 @@ import locale
 from scrapy.shell import inspect_response
 from jobcrawl.items import JobItem
 
+
 class AllJobsSpider(scrapy.Spider):
     """ Spider to scrape job information from site http://www.alljobs.co.il """
 
@@ -16,9 +17,7 @@ class AllJobsSpider(scrapy.Spider):
         "page=1&position=&type=&freetxt=&city=&region=",
     ]
 
-
     def __init__(self):
-
 
         sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
         reload(sys)
@@ -35,7 +34,7 @@ class AllJobsSpider(scrapy.Spider):
         except:
             total_pages = 2000
 
-        # total_pages =1
+        total_pages = 1
 
         for i in range(total_pages):
             page_link = "http://www.alljobs.co.il/SearchResultsGuest.aspx?page=%s&position=&type=&freetxt=&city=&region=" % str(i + 1)
@@ -159,4 +158,3 @@ class AllJobsSpider(scrapy.Spider):
         }
 
         yield item
-
