@@ -114,3 +114,4 @@ SMTP_PASSWORD = 'd'
 import time
 # LOG_STDOUT = True
 # LOG_FILE = "%s_%s.txt" % ('scrapy_log_output', time.strftime('%Y-%m-%d'))
+DOWNLOADER_CLIENTCONTEXTFACTORY = 'jobcrawl.contextfactory.TLSFlexibleContextFactory'
