@@ -106,7 +106,7 @@ EMAIL_TO = 'bikeshkawang@gmail.com'
 SMTP_SERVER = 'smtp.gmail.com'
 SMTP_PORT = 587
 SMTP_USERNAME = 'bikeshkawang@gmail.com'
-SMTP_PASSWORD = 'd'
+SMTP_PASSWORD = ''
 # MAIL_SUBJECT = 'Daily client changes List'
 # MAIL_BODY = "Please find the attachment"
 
