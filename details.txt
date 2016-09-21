@@ -18,3 +18,6 @@ Tasks:
 3) for removed companies - after you create the list, go over the list automaticly, and check if it is actually removed, if not then erase it from the removed list
 4)  for the new companies, compare not 1 day back but 3-7 days back. new company, is one that didn't exist for the past 5 days
 5) (optional) maybe do a double scrape, run it twice
+
+Drushim:
+1) All data is in main page. So, no need to go to each job page.
