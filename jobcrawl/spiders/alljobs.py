@@ -36,7 +36,6 @@ class AllJobsSpider(scrapy.Spider):
             total_pages = 2000
 
         # total_pages = 1
-
         for i in range(total_pages):
             page_link = "http://www.alljobs.co.il/SearchResultsGuest.aspx?" \
                         "page=%s&position=&type=&freetxt=&city=&region=" \
@@ -50,12 +49,12 @@ class AllJobsSpider(scrapy.Spider):
         if response.status != 200:
             self.logger.error("{}\n ERROR Code {}: {} \n {}".format(
                 "*" * 30, response.status, response.url, "*" * 30)
-                )
+            )
         else:
             self.logger.info(
                 "{}\n  Status Code {} OK: {} \n {}".format(
                     "*" * 30, response.status, response.url, "*" * 30)
-                    )
+            )
 
         job_container_div_list = response.xpath("//div[@class='open-board']")
 
@@ -112,7 +111,7 @@ class AllJobsSpider(scrapy.Spider):
                     "//div[@class='job-regions-box']")
                 if location_list_sel:
                     location_list = location_list_sel.xpath(
-                                                    ".//a/text()").extract()
+                        ".//a/text()").extract()
                     country_areas = ", ".join(location_list)
                 else:
                     country_areas = job_item_sel.xpath(
