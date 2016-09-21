@@ -110,11 +110,11 @@ class DrushimSpider(scrapy.Spider):
 
                         if day in job_post_date:
                             job_post_date = datetime.date.today() - \
-                                    datetime.timedelta(days=job_post_date_num)
+                                datetime.timedelta(days=job_post_date_num)
                             job_post_date = job_post_date.strftime("%d/%m/%Y")
                         elif days in job_post_date:
                             job_post_date = datetime.date.today() - \
-                                    datetime.timedelta(days=job_post_date_num)
+                                datetime.timedelta(days=job_post_date_num)
                             job_post_date = job_post_date.strftime("%d/%m/%Y")
 
                         elif [x for x in hms if x in job_post_date]:
