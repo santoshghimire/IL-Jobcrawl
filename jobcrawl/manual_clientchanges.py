@@ -5,7 +5,6 @@ import sys
 import locale
 import codecs
 import pandas as pd
-from jobcrawl import settings
 
 settings = {
     'MYSQL_HOST':'localhost',
