@@ -106,7 +106,6 @@ class ClientChanges:
 
         writer.save()
 
-#
-#
-# if __name__ =='__main__':
-#     ClientChanges()
+
+if __name__ == '__main__':
+    ClientChanges()
