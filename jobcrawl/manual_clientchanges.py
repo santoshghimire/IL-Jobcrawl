@@ -51,9 +51,10 @@ class ClientChanges:
     def read_sql(self):
         """ Read sql query (database table)  and return pandas dataframe"""
 
-        conn = pymysql.connect(host=settings.MYSQL_HOST, port=3306, user=settings.MYSQL_USER,
-                               passwd=settings.MYSQL_PASSWORD, db=settings.MYSQL_DBNAME,
-                               charset='utf8')
+        conn = pymysql.connect(host=settings.get('MYSQL_HOST'), port=3306,
+            user=settings.get('MYSQL_USER'),
+            passwd=settings.get('MYSQL_PASSWORD'), db=settings.get('MYSQL_DBNAME'),
+            charset='utf8')
 
         sql = """SELECT Site,Company, Company_jobs,Crawl_Date,Job_Post_Date,unique_id
                                      FROM sites_datas
