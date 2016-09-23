@@ -87,6 +87,7 @@ class JobscrawlerPipeline(object):
         if spider.name != 'left':
             # save each spider excel file
             self.book.save(self.temp_each_site_excel_file_path)
+            spider.logger.info('huhaahaa')
             try:
                 main_book = load_workbook(main_excel_file_path)
                 main_writer = pd.ExcelWriter(
@@ -107,7 +108,7 @@ class JobscrawlerPipeline(object):
                 except:
                     pass
             except:
-                spider.log(
+                spider.logger.info(
                     "openpyxl BadZipfile ERROR Dosen't effect our automation")
                 # Error in attaching file to main sheet so
                 # send email for total site data

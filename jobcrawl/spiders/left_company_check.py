@@ -72,9 +72,9 @@ class LeftCompany(scrapy.Spider):
                 os.remove(jobmaster_file)
                 os.remove(alljobs_file)
             except:
-                pass
+                self.logger.info('Could not remove crawled complete files')
         except:
-            pass
+            self.logger.info('Could not send client change email')
 
     def start_requests(self):
 
