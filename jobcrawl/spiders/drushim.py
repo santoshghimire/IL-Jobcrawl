@@ -159,5 +159,5 @@ class DrushimSpider(scrapy.Spider):
         ).extract_first()
         # next_pagi = 'https://www.drushim.co.il/jobs/?page=2'
 
-        # if next_pagi:
-        #     yield scrapy.Request(next_pagi, callback=self.parse)
+        if next_pagi:
+            yield scrapy.Request(next_pagi, callback=self.parse)

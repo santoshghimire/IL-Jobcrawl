@@ -38,7 +38,7 @@ class JobmasterSpider(scrapy.Spider):
 
         for location_li in job_location_links_list:
             self.total_locations += 1
-            return scrapy.Request(
+            yield scrapy.Request(
                 response.urljoin(location_li),
                 callback=self.parse_each_location,
                 dont_filter=True
@@ -197,7 +197,7 @@ class JobmasterSpider(scrapy.Spider):
 
             nextpagi_text = pagi_link_sel.xpath(
                 "text()").extract_first()
-            # if nextpagi_text == u'\u05d4\u05d1\u05d0 \xbb':
-            #     yield scrapy.Request(response.urljoin(
-            #         pagi_link_sel.xpath("@href").extract_first()),
-            #         self.parse_each_location, dont_filter=True)
+            if nextpagi_text == u'\u05d4\u05d1\u05d0 \xbb':
+                yield scrapy.Request(response.urljoin(
+                    pagi_link_sel.xpath("@href").extract_first()),
+                    self.parse_each_location, dont_filter=True)

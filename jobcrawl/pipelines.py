@@ -19,13 +19,6 @@ import datetime
 import clientchanges
 from openpyxl import load_workbook
 from mailer import send_email
-# from scrapy.crawler import CrawlerProcess
-
-# from spiders.left_company_check import LeftCompany
-# from twisted.internet import reactor
-# import scrapy
-# from scrapy.crawler import CrawlerRunner
-# from scrapy.utils.log import configure_logging
 
 from openpyxl import Workbook
 

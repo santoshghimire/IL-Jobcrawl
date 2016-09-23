@@ -3,7 +3,6 @@ import sys
 import codecs
 import scrapy
 import locale
-# from scrapy.shell import inspect_response
 from jobcrawl.items import JobItem
 
 
@@ -35,7 +34,7 @@ class AllJobsSpider(scrapy.Spider):
         except:
             total_pages = 2000
 
-        total_pages = 1
+        # total_pages = 1
         for i in range(total_pages):
             page_link = "http://www.alljobs.co.il/SearchResultsGuest.aspx?" \
                         "page=%s&position=&type=&freetxt=&city=&region=" \
