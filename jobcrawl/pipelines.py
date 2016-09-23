@@ -29,21 +29,37 @@ pymysql.install_as_MySQLdb()
 
 
 directory = "./IL-jobcrawl-data"
-# main_excel_file_path = "{}/{}_site_data.xlsx".format(directory, today_str)
 main_excel_file_path = "{}/{}_Daily-List-Of-Competitor-Jobs.xlsx".format(
     directory, today_str)
 
 
 class JobscrawlerPipeline(object):
 
+    def __init__(self, dbpool):
+        self.dbpool = dbpool
+        self.ids_seen = set()
+
+    @classmethod
+    def from_settings(cls, settings):
+        dbargs = dict(
+            host=settings['MYSQL_HOST'],
+            db=settings['MYSQL_DBNAME'],
+            user=settings['MYSQL_USER'],
+            password=settings['MYSQL_PASSWORD'],
+            charset='utf8',
+            use_unicode=True,
+        )
+        dbpool = adbapi.ConnectionPool('MySQLdb', **dbargs)
+        return cls(dbpool)
+
     def open_spider(self, spider):
+        self._start_excel_preparation(spider)
 
+    def _start_excel_preparation(self, spider):
         if spider.name != 'left':
-
             if not os.path.exists(directory):
                 os.mkdir(directory)
 
-            self.ids_seen = set()
             # name of the sheet for current website
             self.sheet_name = spider.name.title()
             self.temp_each_site_excel_file_path = '{}/{}_{}.xls'.format(
@@ -57,7 +73,6 @@ class JobscrawlerPipeline(object):
             """ Create main excel file with all sheets"""
             if not os.path.isfile(main_excel_file_path):
                 wb = Workbook(encoding='utf-8')
-                # wb = Workbook()
                 wb.active.title = 'Drushim'
                 wb.create_sheet('Jobmaster')
                 wb.create_sheet('Alljobs')
@@ -84,10 +99,12 @@ class JobscrawlerPipeline(object):
             self.next_row = self.sheet.last_used_row
 
     def close_spider(self, spider):
+        self._end_excel_preparation(spider)
+
+    def _end_excel_preparation(self, spider):
         if spider.name != 'left':
             # save each spider excel file
             self.book.save(self.temp_each_site_excel_file_path)
-            spider.logger.info('huhaahaa')
             try:
                 main_book = load_workbook(main_excel_file_path)
                 main_writer = pd.ExcelWriter(
@@ -137,9 +154,6 @@ class JobscrawlerPipeline(object):
                 os.path.isfile(jobmaster_file) and
                 os.path.isfile(alljobs_file)
             ):
-                os.remove(drushim_file)
-                os.remove(alljobs_file)
-                os.remove(jobmaster_file)
 
                 # send email for total site data
                 directory = 'IL-jobcrawl-data'
@@ -149,17 +163,26 @@ class JobscrawlerPipeline(object):
 
                 send_email(directory=directory, file_name=file_name, body=body)
 
-    def process_item(self, item, spider):
+                # prepare clientchanges report
+                clientchanges.ClientChanges()
 
+                os.remove(drushim_file)
+                os.remove(alljobs_file)
+                os.remove(jobmaster_file)
+
+    def process_item(self, item, spider):
         if spider.name != 'left':
             crawl_date = datetime.date.today()
             crawl_date_str = crawl_date.strftime("%d/%m/%Y")
             if item['Job']['unique_id'] in self.ids_seen:
                 raise DropItem(
-                    "*" * 100 + "\n" +
-                    "Duplicate item found: %s" % item + "\n" + "*" * 100)
+                    "+" * 100 + "\n" + "Duplicate item found: %s" % item +
+                    "\n" + "+" * 100)
             else:
                 self.ids_seen.add(item['Job']['unique_id'])
+                dbpool = self.dbpool.runInteraction(self.insert, item, spider)
+                dbpool.addErrback(self.handle_error, item, spider)
+                dbpool.addBoth(lambda _: item)
 
                 self.next_row += 1
                 self.sheet.write(self.next_row, 0, item['Job']['Site'])
@@ -180,44 +203,10 @@ class JobscrawlerPipeline(object):
                     self.next_row, 10, item['Job']['AllJobs_Job_class'])
                 self.sheet.write(self.next_row, 11, crawl_date_str)
                 self.sheet.write(self.next_row, 12, item['Job']['unique_id'])
-                return item
-
-
-class MySQLPipeline(object):
-
-    def __init__(self, dbpool):
-        self.dbpool = dbpool
-        self.ids_seen = set()
-
-    @classmethod
-    def from_settings(cls, settings):
-        dbargs = dict(
-            host=settings['MYSQL_HOST'],
-            db=settings['MYSQL_DBNAME'],
-            user=settings['MYSQL_USER'],
-            password=settings['MYSQL_PASSWORD'],
-            charset='utf8',
-            use_unicode=True,
-        )
-        dbpool = adbapi.ConnectionPool('MySQLdb', **dbargs)
-        return cls(dbpool)
-
-    def process_item(self, item, spider):
-
-        if spider.name != 'left':
-            if item['Job']['unique_id'] in self.ids_seen:
-                raise DropItem(
-                    "+" * 100 + "\n" + "Duplicate item found: %s" % item +
-                    "\n" + "+" * 100)
-            else:
-                self.ids_seen.add(item['Job']['unique_id'])
-                dbpool = self.dbpool.runInteraction(self.insert, item, spider)
-                dbpool.addErrback(self.handle_error, item, spider)
-                dbpool.addBoth(lambda _: item)
                 return dbpool
+                # return item
 
     def insert(self, conn, item, spider):
-
         if spider.name != 'left':
             crawl_date = datetime.date.today()
             crawl_date_str = crawl_date.strftime("%d/%m/%Y")
@@ -257,30 +246,6 @@ class MySQLPipeline(object):
             ))
             spider.log("Item stored in dbSchema: %s %r" % (
                 item['Job']['Job_id'], item))
-
-    def close_spider(self, spider):
-        if spider.name != 'left':
-            directory = "./IL-jobcrawl-data"
-            # clientchanges.ClientChanges()
-            """ create a ...crawled_complete.xls file for each
-            spider to notify crawling has finished"""
-            open('{}/{}_{}_crawled_complete.xls'.format(
-                directory, today_str, spider.name.title()), 'a')
-
-            drushim_file = "{}/{}_Drushim_crawled_complete.xls".format(
-                directory, today_str)
-            jobmaster_file = "{}/{}_Jobmaster_crawled_complete.xls".format(
-                directory, today_str)
-            alljobs_file = "{}/{}_Alljobs_crawled_complete.xls".format(
-                directory, today_str)
-            """ check if all the ...crawled_complete.xls excel file for 3 sites exists and
-            proceed creating client changes xls"""
-            if (
-                os.path.isfile(drushim_file) and
-                os.path.isfile(jobmaster_file) and
-                os.path.isfile(alljobs_file)
-            ):
-                clientchanges.ClientChanges()
 
     def handle_error(self, failure, item, spider):
         """Handle occurred on dbSchema interaction."""

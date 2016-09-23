@@ -70,8 +70,6 @@ class JobmasterSpider(scrapy.Spider):
                 job_id = ""
                 job_link = ""
 
-            print(job_article_id)
-            print (job_id[0])
             job_item_sel = job_article.xpath(".//div[@class='JobItemRight']")
             try:
                 job_title = job_item_sel.xpath(

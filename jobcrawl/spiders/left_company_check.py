@@ -11,7 +11,7 @@ import datetime
 from scrapy.xlib.pydispatch import dispatcher
 
 from jobcrawl.mailer import send_email
-import os
+# import os
 
 today = datetime.date.today()
 today_str = today.strftime("%Y_%m_%d")
@@ -53,12 +53,12 @@ class LeftCompany(scrapy.Spider):
 
         try:
             # send email for competitior changes
-            drushim_file = "{}/{}_Drushim_crawled_complete.xls".format(
-                directory, today_str)
-            jobmaster_file = "{}/{}_Jobmaster_crawled_complete.xls".format(
-                directory, today_str)
-            alljobs_file = "{}/{}_Alljobs_crawled_complete.xls".format(
-                directory, today_str)
+            # drushim_file = "{}/{}_Drushim_crawled_complete.xls".format(
+            #     directory, today_str)
+            # jobmaster_file = "{}/{}_Jobmaster_crawled_complete.xls".format(
+            #     directory, today_str)
+            # alljobs_file = "{}/{}_Alljobs_crawled_complete.xls".format(
+            #     directory, today_str)
             directory = 'daily_competitor_client_changes'
             file_name = '{}_Daily-Competitor-Client-Change.xlsx'.format(
                 today_str)
@@ -67,12 +67,12 @@ class LeftCompany(scrapy.Spider):
             send_email(directory=directory, file_name=file_name, body=body)
 
             """After sending email remove the crawled_complete.xls file"""
-            try:
-                os.remove(drushim_file)
-                os.remove(jobmaster_file)
-                os.remove(alljobs_file)
-            except:
-                self.logger.info('Could not remove crawled complete files')
+            # try:
+            #     os.remove(drushim_file)
+            #     os.remove(jobmaster_file)
+            #     os.remove(alljobs_file)
+            # except:
+            #     self.logger.info('Could not remove crawled complete files')
         except:
             self.logger.info('Could not send client change email')
 
