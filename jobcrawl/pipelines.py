@@ -94,27 +94,36 @@ class JobscrawlerPipeline(object):
         if spider.name != 'left':
             # save each spider excel file
             self.book.save(self.temp_each_site_excel_file_path)
-            # try:
-            main_book = load_workbook(main_excel_file_path)
-            main_writer = pd.ExcelWriter(
-                main_excel_file_path, engine='openpyxl')
-            main_writer.book = main_book
-
-            main_writer.sheets = dict(
-                (ws.title, ws) for ws in main_book.worksheets)
-            unsorted_xls_df = pd.read_excel(
-                self.temp_each_site_excel_file_path)
-            sorted_xls = unsorted_xls_df.sort_values(by='Company')
-            sorted_xls = sorted_xls.drop_duplicates()
-
-            sorted_xls.to_excel(main_writer, self.sheet_name, index=False)
-            main_writer.save()
             try:
-                os.remove(self.temp_each_site_excel_file_path)
+                main_book = load_workbook(main_excel_file_path)
+                main_writer = pd.ExcelWriter(
+                    main_excel_file_path, engine='openpyxl')
+                main_writer.book = main_book
+
+                main_writer.sheets = dict(
+                    (ws.title, ws) for ws in main_book.worksheets)
+                unsorted_xls_df = pd.read_excel(
+                    self.temp_each_site_excel_file_path)
+                sorted_xls = unsorted_xls_df.sort_values(by='Company')
+                sorted_xls = sorted_xls.drop_duplicates()
+
+                sorted_xls.to_excel(main_writer, self.sheet_name, index=False)
+                main_writer.save()
+                try:
+                    os.remove(self.temp_each_site_excel_file_path)
+                except:
+                    pass
             except:
-                pass
-            # spider.log(
-            #     "openpyxl BadZipfile ERROR Dosen't effect our automation")
+                spider.log(
+                    "openpyxl BadZipfile ERROR Dosen't effect our automation")
+                # Error in attaching file to main sheet so
+                # send email for total site data
+                directory = 'IL-jobcrawl-data'
+                file_name = '{}_{}.xlsx'.format(
+                    today_str, self.sheet_name)
+                body = "Please find the attachment for {}".format(file_name)
+
+                send_email(directory=directory, file_name=file_name, body=body)
 
             directory = './IL-jobcrawl-data'
             open('{}/{}_{}_data_transfer_complete.xls'.format(
