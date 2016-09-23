@@ -1,3 +1,17 @@
+Alljobs : 20 => 10588
+Alljobs : 21 => 10446
+Alljobs : 22 => 10272
+
+Drushim: 20 => 9140
+Drushim: 21 => 8337
+Drushim: 22 => 8318
+
+JobMaster: 20 => 13194
+JobMaster: 21 => 11340
+JobMaster: 22 => 11050
+
+
+
 1 site at a time
 1000 pages
 16 pages in the same time
@@ -21,3 +35,9 @@ Tasks:
 
 Drushim:
 1) All data is in main page. So, no need to go to each job page.
+
+            # print('***************************************************')
+            # print('There is a problem sending email check settings.py')
+            # print(" Check if you have Turn on access for less secure app \n"
+            #       " https://support.google.com/accounts/answer/6010255?hl=en")
+            # print('***************************************************')

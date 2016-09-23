@@ -44,7 +44,7 @@ class ClientChanges:
         if not os.path.exists(directory_name):
             os.mkdir(directory_name)
 
-        filename = "{}_Daily-Competitor-Client-Change.xlsx".format(self.today.strftime("%Y_%m_%d"))
+        filename = "{}_Daily-Competitor-Client-Change.xlsx".format(self.today_str.replace("/", '_'))
         excel_file_path = "./{}/{}".format(directory_name, filename)
         return excel_file_path
 
