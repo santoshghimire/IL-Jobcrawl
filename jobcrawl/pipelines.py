@@ -128,7 +128,6 @@ class JobscrawlerPipeline(object):
                     item['Job']['AllJobs_Job_class'], crawl_date_str,
                     item['Job']['unique_id']
                 ])
-                self.workbook.save(self.temp_each_site_excel_file_path)
                 # self.sheet.write(self.next_row, 0, item['Job']['Site'])
                 # self.sheet.write(self.next_row, 1, item['Job']['Company'])
                 # self.sheet.write(
@@ -196,6 +195,9 @@ class JobscrawlerPipeline(object):
         if spider.name != 'left':
             # save each spider excel file
             # self.book.save(self.temp_each_site_excel_file_path)
+
+            self.workbook.save(self.temp_each_site_excel_file_path)
+
             main_book = load_workbook(main_excel_file_path)
             main_writer = pd.ExcelWriter(
                 main_excel_file_path, engine='openpyxl')
