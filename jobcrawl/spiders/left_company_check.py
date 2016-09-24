@@ -11,7 +11,6 @@ import datetime
 from scrapy.xlib.pydispatch import dispatcher
 
 from jobcrawl.mailer import send_email
-# import os
 
 today = datetime.date.today()
 today_str = today.strftime("%Y_%m_%d")
@@ -53,31 +52,16 @@ class LeftCompany(scrapy.Spider):
 
         try:
             # send email for competitior changes
-            # drushim_file = "{}/{}_Drushim_crawled_complete.xls".format(
-            #     directory, today_str)
-            # jobmaster_file = "{}/{}_Jobmaster_crawled_complete.xls".format(
-            #     directory, today_str)
-            # alljobs_file = "{}/{}_Alljobs_crawled_complete.xls".format(
-            #     directory, today_str)
             directory = 'daily_competitor_client_changes'
             file_name = '{}_Daily-Competitor-Client-Change.xlsx'.format(
                 today_str)
             body = "Please find the attachment for {}".format(file_name)
 
             send_email(directory=directory, file_name=file_name, body=body)
-
-            """After sending email remove the crawled_complete.xls file"""
-            # try:
-            #     os.remove(drushim_file)
-            #     os.remove(jobmaster_file)
-            #     os.remove(alljobs_file)
-            # except:
-            #     self.logger.info('Could not remove crawled complete files')
         except:
             self.logger.info('Could not send client change email')
 
     def start_requests(self):
-
         # excel_path = 'daily_competitor_client_changes/main.xlsx'
         wb = open_workbook(self.excel_path)
         sheet = wb.sheet_by_name('Companies_That_left')
@@ -109,7 +93,6 @@ class LeftCompany(scrapy.Spider):
             drushimob_div or alljobs_jobs_div or jobmaster_jobs or
             '/Search/' in response.url
         ):
-            # print ('Job', response.url)
             wb = load_workbook(self.excel_path)
             sheet = wb.get_sheet_by_name('Companies_That_left')
 
