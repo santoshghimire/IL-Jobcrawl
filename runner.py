@@ -26,9 +26,9 @@ runner = CrawlerRunner(settings)
 
 @defer.inlineCallbacks
 def crawl():
+    yield runner.crawl(JobmasterSpider)
     yield runner.crawl(AllJobsSpider)
     yield runner.crawl(DrushimSpider)
-    yield runner.crawl(JobmasterSpider)
     yield runner.crawl(LeftCompany)
     reactor.stop()
 
