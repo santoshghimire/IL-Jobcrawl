@@ -6,6 +6,7 @@ import codecs
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl import Workbook
+import os
 
 settings = {
     'MYSQL_HOST': 'localhost',
@@ -53,33 +54,75 @@ def read_sql(site):
     return file_name
 
 
-def main():
+def mainn():
     # file_names = []
     # for site in ['AllJobs', 'Drushim', 'JobMaster']:
     #     file_name = read_sql(site)
     #     file_names.append(file_name)
 
-    file_names = ['AllJobs.xlsx', 'Drushim.xlsx', 'JobMaster.xlsx']
-    main_excel_file_path = 'output.xlsx'
+    # file_names = ['AllJobs.xlsx', 'Drushim.xlsx', 'JobMaster.xlsx']
+    # main_excel_file_path = 'output.xlsx'
 
-    wb = Workbook(encoding='utf-8')
-    wb.active.title = 'Drushim'
-    wb.save(main_excel_file_path)
+    # wb = Workbook(encoding='utf-8')
+    # wb.active.title = 'Drushim'
+    # wb.save(main_excel_file_path)
 
-    for each_file in file_names:
-        main_writer = pd.ExcelWriter(
-            main_excel_file_path, engine='openpyxl')
-        main_book = load_workbook(main_excel_file_path)
-        main_writer.book = main_book
+    # for each_file in file_names:
+    #     main_writer = pd.ExcelWriter(
+    #         main_excel_file_path, engine='openpyxl')
+    #     main_book = load_workbook(main_excel_file_path)
+    #     main_writer.book = main_book
 
-        main_writer.sheets = dict(
-            (ws.title, ws) for ws in main_book.worksheets)
+    #     main_writer.sheets = dict(
+    #         (ws.title, ws) for ws in main_book.worksheets)
 
-        sorted_xls = pd.read_excel(
-            each_file)
-        sheet_name = each_file.replace('.xlsx', '')
-        sorted_xls.to_excel(main_writer, sheet_name, index=False)
-        main_writer.save()
+    #     sorted_xls = pd.read_excel(
+    #         each_file)
+    #     sheet_name = each_file.replace('.xlsx', '')
+    #     sorted_xls.to_excel(main_writer, sheet_name, index=False)
+    #     main_writer.save()
+
+    main_excel_file_path = '../2016_09_24_Daily-Competitor-Client-Change.xlsx'
+    sheet_name = 'Drushim'
+    temp_each_site_excel_file_path = '../2016_09_24_Drushim.xlsx'
+
+    if not os.path.isfile(main_excel_file_path):
+        wb = Workbook(encoding='utf-8')
+        wb.active.title = 'Drushim'
+        wb.create_sheet('Jobmaster')
+        wb.create_sheet('Alljobs')
+
+        wb.save(main_excel_file_path)
+
+    main_book = load_workbook(main_excel_file_path)
+    main_writer = pd.ExcelWriter(
+        main_excel_file_path, engine='openpyxl')
+    main_writer.book = main_book
+
+    main_writer.sheets = dict(
+        (ws.title, ws) for ws in main_book.worksheets)
+    unsorted_xls_df = pd.read_excel(
+        temp_each_site_excel_file_path)
+    sorted_xls = unsorted_xls_df.sort_values(by='Company')
+    sorted_xls = sorted_xls.drop_duplicates()
+
+    sorted_xls.to_excel(main_writer, sheet_name, index=False)
+    main_writer.save()
+
+
+def main():
+    from openpyxl import Workbook
+    wb = Workbook()
+
+    # grab the active worksheet
+    ws = wb.active
+
+    # Rows can also be appended
+    ws.append([1, 2, 3])
+
+    # Save the file
+    wb.save("sample.xlsx")
+
 
 if __name__ == '__main__':
     main()
