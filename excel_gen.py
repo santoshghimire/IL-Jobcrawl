@@ -64,6 +64,7 @@ def main(email=False):
     # if not email:
     main_excel_path = '{0}/{1}_Daily-List-Of-Competitor-Jobs.xlsx'.format(
         directory, today_str)
+    os.remove(main_excel_path)
     for sheet_name in ['AllJobs', 'Drushim', 'JobMaster']:
         # sheet_name = 'Drushim'
         file_name = sheet_name.lower().title()
