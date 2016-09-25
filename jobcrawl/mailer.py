@@ -6,7 +6,6 @@ from email.mime.audio import MIMEAudio
 from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage
 from email.mime.text import MIMEText
-import datetime
 from jobcrawl import settings
 import os
 
@@ -18,9 +17,6 @@ username = settings.SMTP_USERNAME
 password = settings.SMTP_PASSWORD
 # subject = settings.MAIL_SUBJECT
 # body = settings.MAIL_BODY
-
-today = datetime.date.today()
-today_str = today.strftime("%Y_%m_%d")
 
 
 def send_email(directory, file_name, body):
