@@ -1,5 +1,4 @@
-
-
+# -*- coding: utf-8 -*-
 from jobcrawl.spiders.alljobs import AllJobsSpider
 from jobcrawl.spiders.drushim import DrushimSpider
 from jobcrawl.spiders.jobmaster import JobmasterSpider
@@ -14,7 +13,9 @@ from scrapy.utils.log import configure_logging
 
 configure_logging(install_root_handler=False)
 logging.basicConfig(
-    filename="%s_%s.txt" % ('scrapy_log_output', time.strftime('%Y-%m-%d')),
+    filename="%s/%s_%s.txt" % (
+        'logs', 'scrapy_log_output', time.strftime('%Y-%m-%d')
+    ),
     format='%(levelname)s: %(message)s',
     level=logging.INFO
 )
