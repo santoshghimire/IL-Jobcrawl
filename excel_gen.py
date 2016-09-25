@@ -73,7 +73,7 @@ def main(email=False):
         )
 
         if not os.path.isfile(main_excel_path):
-            wb = Workbook(encoding='utf-8')
+            wb = Workbook(write_only=True)
             wb.active.title = 'Drushim'
 
             wb.save(main_excel_path)
