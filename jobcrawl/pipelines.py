@@ -66,15 +66,11 @@ class JobscrawlerPipeline(object):
 
             """ Create main excel file with all sheets"""
             if not os.path.isfile(main_excel_file_path):
-                wb = Workbook(encoding='utf-8')
-                wb.active.title = 'Drushim'
-                wb.create_sheet('Jobmaster')
-                wb.create_sheet('Alljobs')
-
+                wb = Workbook()
                 wb.save(main_excel_file_path)
 
             """ To create each site's excel file"""
-            self.workbook = Workbook(encoding='utf-8')
+            self.workbook = Workbook()
             self.workbook.active.title = self.sheet_name
 
             # grab the active worksheet
@@ -194,36 +190,44 @@ class JobscrawlerPipeline(object):
     def close_spider(self, spider):
         if spider.name != 'left':
             # save each spider excel file
-            # self.book.save(self.temp_each_site_excel_file_path)
-
             self.workbook.save(self.temp_each_site_excel_file_path)
 
-            main_book = load_workbook(main_excel_file_path)
-            main_writer = pd.ExcelWriter(
-                main_excel_file_path, engine='openpyxl')
-            main_writer.book = main_book
+            try:
+                main_book = load_workbook(main_excel_file_path)
+            except:
+                main_book = None
+            if main_book:
+                # remove empty first sheet
+                sheet_names = main_book.get_sheet_names()
+                if len(sheet_names) > 1:
+                    try:
+                        std = main_book.get_sheet_by_name('Sheet')
+                        main_book.remove_sheet(std)
+                        main_book.save(main_excel_file_path)
+                    except:
+                        pass
+                main_writer = pd.ExcelWriter(
+                    main_excel_file_path, engine='openpyxl')
+                main_writer.book = main_book
 
-            main_writer.sheets = dict(
-                (ws.title, ws) for ws in main_book.worksheets)
-            unsorted_xls_df = pd.read_excel(
-                self.temp_each_site_excel_file_path)
-            sorted_xls = unsorted_xls_df.sort_values(by='Company')
-            sorted_xls = sorted_xls.drop_duplicates()
+                main_writer.sheets = dict(
+                    (ws.title, ws) for ws in main_book.worksheets)
+                unsorted_xls_df = pd.read_excel(
+                    self.temp_each_site_excel_file_path)
+                sorted_xls = unsorted_xls_df.sort_values(by='Company')
+                sorted_xls = sorted_xls.drop_duplicates()
 
-            sorted_xls.to_excel(main_writer, self.sheet_name, index=False)
-            main_writer.save()
-
-            # os.remove(self.temp_each_site_excel_file_path)
-            # spider.logger.info(
-            #     "openpyxl BadZipfile ERROR Dosen't effect our automation")
-            # # Error in attaching file to main sheet so
-            # # send email for total site data
-            # directory = 'IL-jobcrawl-data'
-            # file_name = '{}_{}.xlsx'.format(
-            #     today_str, self.sheet_name)
-            # body = "Please find the attachment for {}".format(file_name)
-
-            # send_email(directory=directory, file_name=file_name, body=body)
+                sorted_xls.to_excel(main_writer, self.sheet_name, index=False)
+                main_writer.save()
+            else:
+                spider.logger.info(
+                    "Error in combining excel sheet, sending individual sheet")
+                # send email for total site data
+                directory = 'IL-jobcrawl-data'
+                file_name = '{}_{}.xlsx'.format(
+                    today_str, self.sheet_name)
+                body = "Please find the attachment for {}".format(file_name)
+                send_email(directory=directory, file_name=file_name, body=body)
 
             directory = './IL-jobcrawl-data'
             open('{}/{}_{}_data_transfer_complete.xls'.format(
@@ -243,13 +247,15 @@ class JobscrawlerPipeline(object):
                 os.path.isfile(jobmaster_file) and
                 os.path.isfile(alljobs_file)
             ):
-                # send email for total site data
-                directory = 'IL-jobcrawl-data'
-                file_name = '{}_Daily-List-Of-Competitor-Jobs.xlsx'.format(
-                    today_str)
-                body = "Please find the attachment for {}".format(file_name)
-
-                send_email(directory=directory, file_name=file_name, body=body)
+                if main_book:
+                    # send email for total site data
+                    directory = 'IL-jobcrawl-data'
+                    file_name = '{}_Daily-List-Of-Competitor-Jobs.xlsx'.format(
+                        today_str)
+                    body = "Please find the attachment for {}".format(
+                        file_name)
+                    send_email(
+                        directory=directory, file_name=file_name, body=body)
 
                 # prepare clientchanges report
                 clientchanges.ClientChanges()
