@@ -111,5 +111,5 @@ def main(email=False):
 
 
 if __name__ == '__main__':
-    # main(email=True)
-    main()
+    main(email=True)
+    # main()
