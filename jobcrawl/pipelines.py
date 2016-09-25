@@ -196,6 +196,11 @@ class JobscrawlerPipeline(object):
                 main_book = load_workbook(main_excel_file_path)
             except:
                 main_book = None
+                spider.logger.info(
+                    "Error in combining {0} excel sheet,".format(
+                        self.sheet_name
+                    )
+                )
             if main_book:
                 # remove empty first sheet
                 sheet_names = main_book.get_sheet_names()
@@ -219,16 +224,6 @@ class JobscrawlerPipeline(object):
 
                 sorted_xls.to_excel(main_writer, self.sheet_name, index=False)
                 main_writer.save()
-            else:
-                spider.logger.info(
-                    "Error in combining excel sheet, sending individual sheet")
-                # send email for total site data
-                directory = 'IL-jobcrawl-data'
-                file_name = '{}_{}.xlsx'.format(
-                    today_str, self.sheet_name)
-                body = "Please find the attachment for {}".format(file_name)
-                send_email(directory=directory, file_name=file_name, body=body)
-
             directory = './IL-jobcrawl-data'
             open('{}/{}_{}_data_transfer_complete.xls'.format(
                 directory, today_str, spider.name.title()), 'a')
@@ -256,6 +251,20 @@ class JobscrawlerPipeline(object):
                         file_name)
                     send_email(
                         directory=directory, file_name=file_name, body=body)
+                else:
+                    spider.logger.info(
+                        "Error in combining excel sheets,"
+                        " sending individual sheet")
+                    # send email for total site data
+                    directory = 'IL-jobcrawl-data'
+                    for site in ['Drushim', 'Alljobs', 'Jobmaster']:
+                        file_name = '{}_{}.xlsx'.format(
+                            today_str, self.sheet_name)
+                        body = "Please find the attachment for {}".format(
+                            file_name)
+                        send_email(
+                            directory=directory, file_name=file_name,
+                            body=body)
 
                 # prepare clientchanges report
                 clientchanges.ClientChanges()
