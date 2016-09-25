@@ -9,7 +9,6 @@ from openpyxl import Workbook
 import os
 
 from jobcrawl.mailer import send_email
-from jobcrawl.clientchanges import ClientChanges
 
 settings = {
     'MYSQL_HOST': 'localhost',
@@ -68,7 +67,7 @@ def main(email=False):
         os.remove(main_excel_path)
     except:
         pass
-    for sheet_name in ['AllJobs', 'Drushim', 'JobMaster']:
+    for sheet_name in ['Drushim', 'AllJobs', 'JobMaster']:
         # sheet_name = 'Drushim'
         file_name = sheet_name.lower().title()
         temp_each_site_excel_file_path = '{0}/{1}_{2}.xlsx'.format(
@@ -76,12 +75,18 @@ def main(email=False):
         )
 
         if not os.path.isfile(main_excel_path):
-            wb = Workbook(write_only=True)
-            wb.active.title = 'Drushim'
-
+            wb = Workbook()
             wb.save(main_excel_path)
 
         main_book = load_workbook(main_excel_path)
+        sheet_names = main_book.get_sheet_names()
+        if len(sheet_names) > 1:
+            try:
+                std = main_book.get_sheet_by_name('Sheet')
+                main_book.remove_sheet(std)
+                main_book.save(main_excel_path)
+            except:
+                pass
         main_writer = pd.ExcelWriter(
             main_excel_path, engine='openpyxl')
         main_writer.book = main_book
@@ -103,8 +108,8 @@ def main(email=False):
         body = "Please find the attachment for {}".format(file_name)
 
         send_email(directory=directory, file_name=file_name, body=body)
-        ClientChanges()
 
 
 if __name__ == '__main__':
-    main(email=True)
+    # main(email=True)
+    main()
