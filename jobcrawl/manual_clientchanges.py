@@ -76,53 +76,60 @@ class ClientChanges:
 
     def excel_writer(self):
         """"write to excel file using pandas """
+        # Remove duplicates
         writer = pd.ExcelWriter(self.excel_file_path)
         columns = ['Site', 'Company', 'Company_jobs', 'Num_Company_jobs']
-        df_main = self.df_main
-        """Groupby site,company and crawl_date and transform total number
-        of jobs on particualr crawl
-        date for the each company of the each sites"""
 
-        df_main['Num_Company_jobs'] = df_main.groupby(
-            ['Site', 'Company', 'Crawl_Date'])['unique_id'].transform(
-            'count')
+        # Groupby site,company and crawl_date and transform total number
+        # of jobs on particualr crawl
+        # date for the each company of the each sites
+        self.df_main['Num_Company_jobs'] = self.df_main.groupby(
+            ['Site', 'Company', 'Crawl_Date']
+        )['unique_id'].transform('count')
 
-        """ Drop duplicates companies for each site on each crawl date"""
-
-        df_main = df_main.drop_duplicates(
+        # Drop duplicates companies for each site on each crawl date
+        self.df_main = self.df_main.drop_duplicates(
             subset=['Site', 'Company', 'Crawl_Date'])
 
-        """ count the number of Crawl_Date for each Sites's Company and
-        transform value to Site's Company
-            Same as droping duplicates"""
-        df_main['crawl_date_count'] = df_main.groupby(
-            ['Site', 'Company'])['unique_id'].transform('count')
+        # ****** GET NEW COMPANIES **********
+        # ***********************************
+        df_new = self.df_main.copy()
+        df_new['crawl_date_count'] = df_new.groupby(
+            ['Site', 'Company']
+        )['unique_id'].transform('count')
+        df_new = df_new[df_new.crawl_date_count == 1]
 
-        """If crawl_date_count is 2 that's mean it was crawled yesterday
-        and today so we are not intrested on this
-
-            we are only instrested in crawl date count  equal to 1
-        """
-
-        df_main = df_main[df_main.crawl_date_count == 1]
-
-        df_new_companies = df_main[df_main.Crawl_Date == self.today_str]
-        df_removed_companies = df_main[
-            df_main.Crawl_Date == self.yesterday_str]
-
+        df_new_companies = df_new[
+            df_new.Crawl_Date == self.today_str]
         df_new_companies = df_new_companies.sort_values(
             by=['Site', 'Company'])
         df_new_companies.to_excel(
-            writer, index=False, sheet_name='New_Company', columns=columns,
-            encoding='utf-8')
+            writer, index=False, sheet_name='New_Company',
+            columns=columns, encoding='utf-8')
 
+        # ****** GET REMOVED COMPANIES ******
+        # ***********************************
+        # Get yesterday and today only data
+        df_removed = self.df_main.copy()
+        df_removed = df_removed[
+            (df_removed['Crawl_Date'] == self.yesterday_str) |
+            (df_removed['Crawl_Date'] == self.today_str)
+        ]
+        # get number of crawl date
+        df_removed['crawl_date_count'] = df_removed.groupby(
+            ['Site', 'Company']
+        )['unique_id'].transform('count')
+        df_removed = df_removed[df_removed.crawl_date_count == 1]
+        df_removed_companies = df_removed[
+            df_removed.Crawl_Date == self.yesterday_str]
         df_removed_companies = df_removed_companies.sort_values(
             by=['Site', 'Company'])
         df_removed_companies.to_excel(
             writer, index=False, sheet_name='Companies_That_left',
             columns=columns, encoding='utf-8')
-        writer.save()
 
+        # save the excel
+        writer.save()
 
 if __name__ == '__main__':
     ClientChanges()
