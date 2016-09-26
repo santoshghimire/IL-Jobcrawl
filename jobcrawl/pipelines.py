@@ -11,7 +11,7 @@ import pymysql
 from twisted.enterprise import adbapi
 from scrapy.exceptions import DropItem
 import datetime
-import clientchanges
+# import clientchanges
 from mailer import send_email
 
 pymysql.install_as_MySQLdb()
@@ -87,7 +87,7 @@ class JobscrawlerPipeline(object):
                     item['Job']['AllJobs_Job_class'], crawl_date_str,
                     item['Job']['unique_id']
                 ]
-                row = [s.encode('utf-8') for s in row]
+                row = [s.encode('utf-8') if s else s for s in row]
                 self.csvwriter.writerow(row)
                 return dbpool
 
@@ -139,27 +139,6 @@ class JobscrawlerPipeline(object):
             send_email(
                 directory=self.directory, file_name=self.file_name,
                 body=body)
-
-            drushim_file = '{}/{}_{}_data_transfer_complete.xls'.format(
-                self.directory, self.today_str, 'Drushim')
-            alljobs_file = '{}/{}_{}_data_transfer_complete.xls'.format(
-                self.directory, self.today_str, 'Alljobs')
-            jobmaster_file = '{}/{}_{}_data_transfer_complete.xls'.format(
-                self.directory, self.today_str, 'Jobmaster')
-
-            """ check if all crawled complete for all sites excel file for 3
-            sites exists and proceed creating client changes xls"""
-            if (
-                os.path.isfile(drushim_file) and
-                os.path.isfile(jobmaster_file) and
-                os.path.isfile(alljobs_file)
-            ):
-                # prepare clientchanges report
-                clientchanges.ClientChanges()
-
-                os.remove(drushim_file)
-                os.remove(alljobs_file)
-                os.remove(jobmaster_file)
 
     def handle_error(self, failure, item, spider):
         """Handle occurred on dbSchema interaction."""
