@@ -1,20 +1,26 @@
 # -*- coding: utf-8 -*-
+
 # Define your item pipelines here
+#
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 import os
 import sys
 import locale
-import csv
 import codecs
 import pymysql
 from twisted.enterprise import adbapi
 from scrapy.exceptions import DropItem
 import datetime
-# import clientchanges
-from mailer import send_email
+from openpyxl import Workbook
+
+today = datetime.date.today()
+today_str = today.strftime("%Y_%m_%d")
 
 pymysql.install_as_MySQLdb()
+
+
+directory = "./IL-jobcrawl-data"
 
 
 class JobscrawlerPipeline(object):
@@ -22,9 +28,6 @@ class JobscrawlerPipeline(object):
     def __init__(self, dbpool):
         self.dbpool = dbpool
         self.ids_seen = set()
-        self.directory = "./IL-jobcrawl-data"
-        self.today = datetime.date.today()
-        self.today_str = self.today.strftime("%Y_%m_%d")
 
     @classmethod
     def from_settings(cls, settings):
@@ -41,22 +44,25 @@ class JobscrawlerPipeline(object):
 
     def open_spider(self, spider):
         if spider.name != 'left':
-            if not os.path.exists(self.directory):
-                os.mkdir(self.directory)
-            self.site_name = spider.name.title()
-            self.file_name = '{}_{}.csv'.format(self.today_str, self.site_name)
-            self.file_path = '{}/{}'.format(
-                self.directory, self.file_name
-            )
+            if not os.path.exists(directory):
+                os.mkdir(directory)
+            # name of the sheet for current website
+            self.sheet_name = spider.name.title()
+            self.temp_each_site_excel_file_path = '{}/{}_{}.xlsx'.format(
+                directory, today_str, self.sheet_name
+            )  # temporary xls file which contain scraped item
             sys.stdout = codecs.getwriter(
                 locale.getpreferredencoding())(sys.stdout)
             reload(sys)
             sys.setdefaultencoding('utf-8')
 
-            # To create each site's csv file
-            csvfile = open(self.file_path, 'w')
-            self.csvwriter = csv.writer(csvfile)
-            self.csvwriter.writerow([
+            """ To create each site's excel file"""
+            self.workbook = Workbook()
+            self.workbook.active.title = self.sheet_name
+
+            # grab the active worksheet
+            self.ws = self.workbook.active
+            self.ws.append([
                 'Site', 'Company', 'Company_jobs', 'Job_id',
                 'Job_title', 'Job_Description', 'Job_Post_Date',
                 'Job_URL', 'Country_Areas', 'Job_categories',
@@ -77,7 +83,7 @@ class JobscrawlerPipeline(object):
                 dbpool.addErrback(self.handle_error, item, spider)
                 dbpool.addBoth(lambda _: item)
 
-                row = [
+                self.ws.append([
                     item['Job']['Site'], item['Job']['Company'],
                     item['Job']['Company_jobs'], item['Job']['Job_id'],
                     item['Job']['Job_title'], item['Job']['Job_Description'],
@@ -86,9 +92,7 @@ class JobscrawlerPipeline(object):
                     item['Job']['Job_categories'],
                     item['Job']['AllJobs_Job_class'], crawl_date_str,
                     item['Job']['unique_id']
-                ]
-                row = [s.encode('utf-8') if s else s for s in row]
-                self.csvwriter.writerow(row)
+                ])
                 return dbpool
 
     def insert(self, conn, item, spider):
@@ -134,11 +138,8 @@ class JobscrawlerPipeline(object):
 
     def close_spider(self, spider):
         if spider.name != 'left':
-            body = "Please find the attachment for {}".format(
-                self.file_name)
-            send_email(
-                directory=self.directory, file_name=self.file_name,
-                body=body)
+            # save each spider excel file
+            self.workbook.save(self.temp_each_site_excel_file_path)
 
     def handle_error(self, failure, item, spider):
         """Handle occurred on dbSchema interaction."""

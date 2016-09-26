@@ -15,13 +15,21 @@ smtp_server = settings.SMTP_SERVER
 smtp_port = settings.SMTP_PORT
 username = settings.SMTP_USERNAME
 password = settings.SMTP_PASSWORD
-# subject = settings.MAIL_SUBJECT
-# body = settings.MAIL_BODY
 
 
-def send_email(directory, file_name, body):
-    file_to_send = "{}/{}".format(directory, file_name)
-    subject = file_name
+def send_email(directory, file_name, multi=False):
+    if multi:
+        file_to_send = ["{}/{}".format(directory, i) for i in file_name]
+    else:
+        file_to_send = ["{}/{}".format(directory, file_name)]
+    if multi:
+        subject = '{}_Daily-List-Of-Competitor-Jobs.xlsx'.format(
+            file_name[0][:10])
+    else:
+        subject = file_name
+
+    body = "Please find the attachment for {}".format(subject)
+
     msg = MIMEMultipart()
     msg["From"] = email_from
     msg["To"] = email_to
@@ -29,6 +37,28 @@ def send_email(directory, file_name, body):
     msg.preamble = subject
     textpart = MIMEText(body, 'plain')
 
+    for each_file in file_to_send:
+        attachment = get_attachment(each_file)
+        attachment.add_header(
+            "Content-Disposition", "attachment",
+            filename=os.path.basename(each_file)
+        )
+        msg.attach(attachment)
+
+    msg.attach(textpart)
+
+    server = smtplib.SMTP("{}:{}".format(smtp_server, smtp_port))
+    server.starttls()
+    server.login(username, password)
+    server.sendmail(email_from, email_to.split(","), msg.as_string())
+
+    print('***************************************************')
+    print('Email Successfully Sent to {} '.format(email_to))
+    print('***************************************************')
+    server.quit()
+
+
+def get_attachment(file_to_send):
     ctype, encoding = mimetypes.guess_type(file_to_send)
     if ctype is None or encoding is not None:
         ctype = "application/octet-stream"
@@ -54,19 +84,4 @@ def send_email(directory, file_name, body):
         attachment.set_payload(fp.read())
         fp.close()
         encoders.encode_base64(attachment)
-    attachment.add_header(
-        "Content-Disposition", "attachment",
-        filename=os.path.basename(file_to_send)
-    )
-    msg.attach(attachment)
-    msg.attach(textpart)
-
-    server = smtplib.SMTP("{}:{}".format(smtp_server, smtp_port))
-    server.starttls()
-    server.login(username, password)
-    server.sendmail(email_from, email_to.split(","), msg.as_string())
-
-    print('***************************************************')
-    print('Email Successfully Sent to {} '.format(email_to))
-    print('***************************************************')
-    server.quit()
+    return attachment

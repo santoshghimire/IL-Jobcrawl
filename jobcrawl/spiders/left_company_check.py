@@ -86,15 +86,19 @@ class LeftCompany(scrapy.Spider):
         left_companies_df.to_excel(writer, 'Companies_That_left', index=False)
         writer.save()
 
+        # send email for competitior changes
+        directory = 'daily_competitor_client_changes'
+        file_name = '{}_Daily-Competitor-Client-Change.xlsx'.format(
+            today_str)
+
+        send_email(directory=directory, file_name=file_name)
+
+        # send an email for 3 excel attachments
         directory = "IL-jobcrawl-data"
-
-        try:
-            # send email for competitior changes
-            directory = 'daily_competitor_client_changes'
-            file_name = '{}_Daily-Competitor-Client-Change.xlsx'.format(
-                today_str)
-            body = "Please find the attachment for {}".format(file_name)
-
-            send_email(directory=directory, file_name=file_name, body=body)
-        except:
-            self.logger.info('Could not send client change email')
+        file_to_send = []
+        for site in ['Drushim', 'Alljobs', 'Jobmaster']:
+            file_name = '{}_{}.xlsx'.format(
+                today_str, site)
+            file_to_send.append(file_name)
+        send_email(
+            directory=directory, file_name=file_to_send, multi=True)
