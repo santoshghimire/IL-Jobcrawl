@@ -18,7 +18,7 @@ settings = {
 }
 
 
-def generate_excel(site):
+def generate_excel(site_name):
     """ Read sql query (database table)  and return pandas dataframe"""
     sys.stdout = codecs.getwriter(
         locale.getpreferredencoding())(sys.stdout)
@@ -27,7 +27,7 @@ def generate_excel(site):
 
     today = datetime.date.today()
     today_str = today.strftime("%d/%m/%Y")
-    site_name = site.lower().title()
+    site_name = site_name.lower().title()
     directory = 'IL-jobcrawl-data'
     file_name = '{}/{}_{}.xlsx'.format(
         directory, today.strftime("%Y_%m_%d"), site_name)
@@ -35,7 +35,10 @@ def generate_excel(site):
         file_name, engine='openpyxl')
 
     # today_str = '24/09/2016'
-
+    names = {
+        'Drushim': 'Drushim', 'Alljobs': 'AllJobs',
+        'Jobmaster': 'JobMaster'}
+    site = names.get(site_name)
     conn = pymysql.connect(
         host=settings.get('MYSQL_HOST'), port=3306,
         user=settings.get('MYSQL_USER'),
@@ -115,6 +118,6 @@ def combile_files(email=False):
 
 if __name__ == '__main__':
     # combile_files(email=True)
-    generate_excel("AllJobs")
-    # generate_excel("JobMaster")
+    generate_excel("Alljobs")
+    # generate_excel("Jobmaster")
     # generate_excel("Drushim")
