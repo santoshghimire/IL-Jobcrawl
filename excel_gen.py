@@ -18,19 +18,22 @@ settings = {
 }
 
 
-def read_sql(site):
+def generate_excel(site):
     """ Read sql query (database table)  and return pandas dataframe"""
     sys.stdout = codecs.getwriter(
         locale.getpreferredencoding())(sys.stdout)
     reload(sys)
     sys.setdefaultencoding('utf-8')
 
-    file_name = '{}.xlsx'.format(site)
+    today = datetime.date.today()
+    today_str = today.strftime("%d/%m/%Y")
+    site_name = site.lower().title()
+    directory = 'IL-jobcrawl-data'
+    file_name = '{}/{}_{}.xlsx'.format(
+        directory, today.strftime("%Y_%m_%d"), site_name)
     main_writer = pd.ExcelWriter(
         file_name, engine='openpyxl')
 
-    today = datetime.date.today()
-    today_str = today.strftime("%d/%m/%Y")
     # today_str = '24/09/2016'
 
     conn = pymysql.connect(
@@ -50,12 +53,12 @@ def read_sql(site):
     """
     df_main = pd.read_sql(sql, conn, params={
         'site': site, 'crawl_date': today_str})
-    df_main.to_excel(main_writer, site, index=False)
+    df_main.to_excel(main_writer, site_name, index=False)
     main_writer.save()
     return file_name
 
 
-def main(email=False):
+def combile_files(email=False):
     directory = 'IL-jobcrawl-data'
     today = datetime.date.today()
     today_str = today.strftime("%Y_%m_%d")
@@ -111,5 +114,7 @@ def main(email=False):
 
 
 if __name__ == '__main__':
-    main(email=True)
-    # main()
+    # combile_files(email=True)
+    generate_excel("AllJobs")
+    # generate_excel("JobMaster")
+    # generate_excel("Drushim")
