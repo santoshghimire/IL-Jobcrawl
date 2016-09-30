@@ -34,7 +34,7 @@ class AllJobsSpider(scrapy.Spider):
         except:
             total_pages = 2000
 
-        # total_pages = 1
+        total_pages = 10
         for i in range(total_pages):
             page_link = "http://www.alljobs.co.il/SearchResultsGuest.aspx?" \
                         "page=%s&position=&type=&freetxt=&city=&region=" \
@@ -105,6 +105,9 @@ class AllJobsSpider(scrapy.Spider):
             except:
                 company_jobs = ""
 
+            if 'SearchResultsGuest.aspx' in company_jobs:
+                # if no company jobs link, then set job link
+                company_jobs = job_link
             try:
                 location_list_sel = response.xpath(
                     "//div[@class='job-regions-box']")
