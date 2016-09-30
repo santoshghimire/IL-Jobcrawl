@@ -34,7 +34,7 @@ class AllJobsSpider(scrapy.Spider):
         except:
             total_pages = 2000
 
-        total_pages = 10
+        # total_pages = 10
         for i in range(total_pages):
             page_link = "http://www.alljobs.co.il/SearchResultsGuest.aspx?" \
                         "page=%s&position=&type=&freetxt=&city=&region=" \
