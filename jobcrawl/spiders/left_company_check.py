@@ -94,22 +94,22 @@ class LeftCompany(scrapy.Spider):
 
         send_email(directory=directory, file_name=file_name)
 
-        # send an email for 3 excel attachments
-        directory = "IL-jobcrawl-data"
-        file_to_send = []
-        for site in ['Drushim', 'Alljobs', 'Jobmaster']:
-            file_name = '{}_{}.xlsx'.format(
-                today_str, site)
-            # check if the file is corrupt
-            try:
-                load_workbook('{}/{}'.format(directory, file_name))
-                print('{} File good'.format(site))
-            except:
-                print('{} file corrupt, regenerationg'.format(site))
-                # file is corrupt, generate from sql
-                generate_excel(site)
-                print('{} File generation success'.format(site))
-            file_to_send.append(file_name)
+        # # send an email for 3 excel attachments
+        # directory = "IL-jobcrawl-data"
+        # file_to_send = []
+        # for site in ['Drushim', 'Alljobs', 'Jobmaster']:
+        #     file_name = '{}_{}.xlsx'.format(
+        #         today_str, site)
+        #     # check if the file is corrupt
+        #     try:
+        #         load_workbook('{}/{}'.format(directory, file_name))
+        #         print('{} File good'.format(site))
+        #     except:
+        #         print('{} file corrupt, regenerationg'.format(site))
+        #         # file is corrupt, generate from sql
+        #         generate_excel(site)
+        #         print('{} File generation success'.format(site))
+        #     file_to_send.append(file_name)
 
-        send_email(
-            directory=directory, file_name=file_to_send, multi=True)
+        # send_email(
+        #     directory=directory, file_name=file_to_send, multi=True)
