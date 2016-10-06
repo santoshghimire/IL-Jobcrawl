@@ -22,18 +22,25 @@ class ClientChanges:
         reload(sys)
         sys.setdefaultencoding('utf-8')
         self.today = datetime.date.today()
+
+        """ For testing purpose will """
+        # self.today_str = "01/10/2016"
+        # self.today = datetime.datetime.strptime(self.today_str, "%d/%m/%Y")
+        """ End Testing """
+
         self.today_str = self.today.strftime("%d/%m/%Y")
+        self.today_file = self.today.strftime("%Y_%m_%d")
 
         self.yesterday = self.today - datetime.timedelta(days=1)
         self.yesterday_str = self.yesterday.strftime("%d/%m/%Y")
 
-        self.one_week = self.today - datetime.timedelta(days=7)
-        self.one_week_str = self.one_week.strftime("%d/%m/%Y")
-
-        """ For testing purpose will """
-        # self.today_str = "21/09/2016"
-        # self.yesterday_str = "20/09/2016"
-        # self.one_week_str = "15/09/2016"
+        # Generate range of dates for a week
+        self.date_range = []
+        for i in range(8):
+            item = (self.today - datetime.timedelta(days=i)).strftime(
+                "%d/%m/%Y")
+            item = '"' + item + '"'
+            self.date_range.append(item)
 
         self.excel_file_path = self.create_file()
         self.df_main = self.read_sql()
@@ -47,7 +54,7 @@ class ClientChanges:
             os.mkdir(directory_name)
 
         filename = "{}_Daily-Competitor-Client-Change.xlsx".format(
-            self.today.strftime("%Y_%m_%d"))
+            self.today_file)
         excel_file_path = "./{}/{}".format(directory_name, filename)
         return excel_file_path
 
@@ -61,17 +68,15 @@ class ClientChanges:
             db=settings.get('MYSQL_DBNAME'),
             charset='utf8'
         )
+        format_strings = ','.join(['%s'] * len(self.date_range))
 
         sql = """SELECT Site,Company, Company_jobs,Crawl_Date,Job_Post_Date,unique_id
             FROM sites_datas
-            WHERE Crawl_Date BETWEEN %(one_week)s AND %(today)s
-        """
+            WHERE Crawl_Date IN (%s)""" % format_strings
+        sql = sql % tuple(self.date_range)
         df_main = pd.read_sql(
-            sql, conn, params={
-                'one_week': self.one_week_str, 'today': self.today_str
-            }
+            sql, conn
         )
-
         return df_main
 
     def excel_writer(self):
