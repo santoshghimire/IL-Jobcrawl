@@ -60,7 +60,7 @@ class DrushimSpider(scrapy.Spider):
                     ".//a[@class='companyLink noToggle']/@href"
                 ).extract_first()
             except:
-                company_jobs = ""
+                company_jobs = job_link
 
             job_fields_sel_list = job_container.xpath(
                 ".//div[@class='jobFields']/*")

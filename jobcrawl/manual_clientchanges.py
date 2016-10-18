@@ -24,8 +24,8 @@ class ClientChanges:
         self.today = datetime.date.today()
 
         """ For testing purpose will """
-        # self.today_str = "01/10/2016"
-        # self.today = datetime.datetime.strptime(self.today_str, "%d/%m/%Y")
+        self.today_str = "01/10/2016"
+        self.today = datetime.datetime.strptime(self.today_str, "%d/%m/%Y")
         """ End Testing """
 
         self.today_str = self.today.strftime("%d/%m/%Y")
@@ -43,8 +43,13 @@ class ClientChanges:
             self.date_range.append(item)
 
         self.excel_file_path = self.create_file()
+
+    def start(self):
         self.df_main = self.read_sql()
-        self.excel_writer()
+        new_removed_stats = self.excel_writer()
+        total_stats = self.get_company_stats()
+        new_removed_stats.update(total_stats)
+        return new_removed_stats
 
     def create_file(self):
         """ Create directory and file for client changes
@@ -79,6 +84,35 @@ class ClientChanges:
         )
         return df_main
 
+    def get_company_stats(self):
+        """ Read sql query (database table)  and return pandas dataframe"""
+
+        conn = pymysql.connect(
+            host=settings.get('MYSQL_HOST'), port=3306,
+            user=settings.get('MYSQL_USER'),
+            passwd=settings.get('MYSQL_PASSWORD'),
+            db=settings.get('MYSQL_DBNAME'),
+            charset='utf8'
+        )
+        data = {'total_jobs': {}, 'total_companies': {}}
+        for company in ["Drushim", "AllJobs", "JobMaster"]:
+            sql = """select count(*) as count from sites_datas where
+                Site= "%s" and
+                Crawl_Date= "%s";""" % (company, self.today_str)
+            result = pd.read_sql(
+                sql, conn
+            )
+            data['total_jobs'][company] = result['count'][0]
+
+            sql_company = """select count(Distinct(Company)) as count from sites_datas
+            where Site="%s" and Crawl_Date="%s";""" % (company, self.today_str)
+            result_company = pd.read_sql(
+                sql_company, conn
+            )
+            data['total_companies'][company] = result_company['count'][0]
+
+        return data
+
     def excel_writer(self):
         """"write to excel file using pandas """
         # Remove duplicates
@@ -108,6 +142,7 @@ class ClientChanges:
             df_new.Crawl_Date == self.today_str]
         df_new_companies = df_new_companies.sort_values(
             by=['Site', 'Company'])
+
         df_new_companies.to_excel(
             writer, index=False, sheet_name='New_Company',
             columns=columns, encoding='utf-8')
@@ -129,6 +164,7 @@ class ClientChanges:
             df_removed.Crawl_Date == self.yesterday_str]
         df_removed_companies = df_removed_companies.sort_values(
             by=['Site', 'Company'])
+
         df_removed_companies.to_excel(
             writer, index=False, sheet_name='Companies_That_left',
             columns=columns, encoding='utf-8')
@@ -136,5 +172,16 @@ class ClientChanges:
         # save the excel
         writer.save()
 
+        # get stats
+        stats = {'new': {}, 'removed': {}}
+        for company in ["Drushim", "AllJobs", "JobMaster"]:
+            stats['new'][company] = len(
+                df_new_companies[df_new_companies['Site'] == company])
+            stats['removed'][company] = len(
+                df_removed_companies[df_removed_companies['Site'] == company])
+
+        return stats
+
 if __name__ == '__main__':
-    ClientChanges()
+    c = ClientChanges()
+    c.start()

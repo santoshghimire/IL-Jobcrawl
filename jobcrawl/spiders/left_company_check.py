@@ -37,7 +37,8 @@ class LeftCompany(scrapy.Spider):
         sys.setdefaultencoding('utf-8')
 
         # prepare clientchanges report
-        ClientChanges()
+        c = ClientChanges()
+        self.stats = c.start()
 
     def start_requests(self):
         wb = open_workbook(self.excel_path)
@@ -92,7 +93,33 @@ class LeftCompany(scrapy.Spider):
         file_name = '{}_Daily-Competitor-Client-Change.xlsx'.format(
             today_str)
 
-        send_email(directory=directory, file_name=file_name)
+        body = """
+            Please find the attachment for {subject}.
+
+            --- New / Removed Companies per Site ---
+            Drushim : (new) {drushim_new}, (removed) {drushim_removed}
+            JobMaster : (new) {jobmaster_new}, (removed) {jobmaster_removed}
+            AllJobs : (new) {alljobs_new}, (removed) {alljobs_removed}
+
+            --- New Companies ---
+            Drushim : {drushim_new}
+            JobMaster : {jobmaster_new}
+            AllJobs : {alljobs_new}
+
+            --- Removed Companies ---
+            Drushim : {drushim_removed}
+            JobMaster : {jobmaster_removed}
+            AllJobs : {alljobs_removed}
+        """.format(
+            subject=file_name, drushim_new=self.stats['new']['Drushim'],
+            drushim_removed=self.stats['removed']['Drushim'],
+            jobmaster_new=self.stats['new']['JobMaster'],
+            jobmaster_removed=self.stats['removed']['JobMaster'],
+            alljobs_new=self.stats['new']['AllJobs'],
+            alljobs_removed=self.stats['removed']['AllJobs']
+        )
+
+        send_email(directory=directory, file_name=file_name, body=body)
 
         # send an email for 3 excel attachments
         directory = "IL-jobcrawl-data"
@@ -111,5 +138,33 @@ class LeftCompany(scrapy.Spider):
                 print('{} File generation success'.format(site))
             file_to_send.append(file_name)
 
+        subject = '{}_Daily-List-Of-Competitor-Jobs.xlsx'.format(
+            file_to_send[0][:10])
+        body = """
+            Please find the attachment for {subject}.
+
+            --- Jobs / Companies per Site ---
+            Drushim : (jobs) {drushim_jobs}, (companies) {drushim_companies}
+            JobMaster : (jobs) {jm_jobs}, (companies) {jm_companies}
+            AllJobs : (jobs) {alljobs_jobs}, (companies) {alljobs_companies}
+
+            --- Jobs per Site ---
+            Drushim : {drushim_jobs} jobs
+            JobMaster : {jm_jobs} jobs
+            AllJobs : {alljobs_jobs} jobs
+
+            --- Companies per Site ---
+            Drushim : {drushim_companies} companies
+            JobMaster : {jm_companies} companies
+            AllJobs : {alljobs_companies} companies
+        """.format(
+            subject=subject, drushim_jobs=self.stats['total_jobs']['Drushim'],
+            drushim_companies=self.stats['total_companies']['Drushim'],
+            jm_jobs=self.stats['total_jobs']['JobMaster'],
+            jm_companies=self.stats['total_companies']['JobMaster'],
+            alljobs_jobs=self.stats['total_jobs']['AllJobs'],
+            alljobs_companies=self.stats['total_companies']['AllJobs']
+        )
+
         send_email(
-            directory=directory, file_name=file_to_send, multi=True)
+            directory=directory, file_name=file_to_send, body=body, multi=True)

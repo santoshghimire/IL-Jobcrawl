@@ -17,7 +17,7 @@ username = settings.SMTP_USERNAME
 password = settings.SMTP_PASSWORD
 
 
-def send_email(directory, file_name, multi=False):
+def send_email(directory, file_name, body, multi=False):
     if multi:
         file_to_send = ["{}/{}".format(directory, i) for i in file_name]
     else:
@@ -27,8 +27,6 @@ def send_email(directory, file_name, multi=False):
             file_name[0][:10])
     else:
         subject = file_name
-
-    body = "Please find the attachment for {}".format(subject)
 
     msg = MIMEMultipart()
     msg["From"] = email_from

@@ -1,43 +1,78 @@
-Alljobs : 20 => 10588
-Alljobs : 21 => 10446
-Alljobs : 22 => 10272
+First of all great job with the fixes, everything seems to be running smoothly over the last few days.
 
-Drushim: 20 => 9140
-Drushim: 21 => 8337
-Drushim: 22 => 8318
+Few small modifications
 
-JobMaster: 20 => 13194
-JobMaster: 21 => 11340
-JobMaster: 22 => 11050
+For the 2016_10_09_Daily-List-Of-Competitor-Jobs.xlsx email
 
+In the body of the email, after the first line please add the following (add an empty line after you first line and then the text in yellow)
 
-
-1 site at a time
-1000 pages
-16 pages in the same time
-63 interations
-1 min
-5Mins or better
-15Min = 3 sites
-Quick scrape = less errors
-less changes
-97%
+--- Jobs / Companies per Site ---
+Drushim : (jobs) xxxx, (companies) yyyy
+JobMaster : (jobs) xxxx, (companies) yyyy
+AllJobs : (jobs) xxxx, (companies) yyyy
+JobNet : (jobs) xxxx, (companies) yyyy
 
 
-Scraping is taking an insane amount of time.
+--- Jobs per Site ---
+Drushim : xxxx jobs
+JobMaster : xxxx jobs
+AllJobs : xxxx jobs
+JobNet : xxxx jobs
 
-Tasks:
-1) Minimize the scraping time to 5 minutes or better.
-2) Run scraping one at a time.
-3) for removed companies - after you create the list, go over the list automaticly, and check if it is actually removed, if not then erase it from the removed list
-4)  for the new companies, compare not 1 day back but 3-7 days back. new company, is one that didn't exist for the past 5 days
-5) (optional) maybe do a double scrape, run it twice
+--- Companies per Site --- 
+Drushim : yyyy companies
+JobMaster : yyyy companies
+AllJobs : yyyy companies
+JobNet : yyyy companies
 
-Drushim:
-1) All data is in main page. So, no need to go to each job page.
+xxxx = number of unique jobs for that specific site
+yyyy = number of unique company names per site
 
-            # print('***************************************************')
-            # print('There is a problem sending email check settings.py')
-            # print(" Check if you have Turn on access for less secure app \n"
-            #       " https://support.google.com/accounts/answer/6010255?hl=en")
-            # print('***************************************************')
+Ans:
+Unique company
+select count(Distinct(Company)) from sites_datas where Site="Drushim" and Crawl_Date="01/10/2016";
+
+Unique jobs
+select count(*) from sites_datas where Site="Drushim" and Crawl_Date="01/10/2016";
+*************************************
+For the 2016_10_09_Daily-Competitor-Client-Change.xlsx
+In the body of the email, after the first line please add the following (add an empty line after you first line and then the text in yellow)
+
+--- New / Removed Companies per Site ---  
+Drushim : (new) xxxx, (removed) yyyy
+JobMaster : (new) xxxx, (removed) yyyy
+AllJobs : (new) xxxx, (removed) yyyy
+JobNet : (new) xxxx, (removed) yyyy
+
+
+--- New Companies --- 
+Drushim : xxxx 
+JobMaster : xxxx 
+AllJobs : xxxx 
+JobNet : xxxx 
+
+--- Removed Companies ---
+Drushim : yyyy 
+JobMaster : yyyy 
+AllJobs : yyyy 
+JobNet : yyyy 
+
+xxxx = number of new companies per site
+yyyy = number of removed companies per site
+
+
+
+one more fix regarding Drushim,
+this seems to be only with drushim, it is similar to the last fix with Aljobs
+Inline image 1
+in some cases the companies don't have a company page, lets add the job page in place of the company page in such cases specifically for the new / removed file.
+
+I also noticed some issue with the scrapes, i took a few companies from JobMaster and compared the number of jobs they have in our excel and it is smaller then the number of the site.
+
+Lets talk about it once your back from your vacation
+
+
+Once done we I will provide you with the specs for JobNet and we can finish.
+
+
+
