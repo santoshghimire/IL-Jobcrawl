@@ -61,7 +61,6 @@ xxxx = number of new companies per site
 yyyy = number of removed companies per site
 
 
-
 one more fix regarding Drushim,
 this seems to be only with drushim, it is similar to the last fix with Aljobs
 Inline image 1
