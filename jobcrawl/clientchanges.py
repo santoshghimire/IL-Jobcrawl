@@ -18,8 +18,8 @@ class ClientChanges:
         self.today = datetime.date.today()
 
         """ For testing purpose will """
-        self.today_str = "01/10/2016"
-        self.today = datetime.datetime.strptime(self.today_str, "%d/%m/%Y")
+        # self.today_str = "01/10/2016"
+        # self.today = datetime.datetime.strptime(self.today_str, "%d/%m/%Y")
         """ End Testing """
 
         self.today_str = self.today.strftime("%d/%m/%Y")
