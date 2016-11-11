@@ -4,6 +4,7 @@ import scrapy
 import locale
 from xlrd import open_workbook
 from openpyxl import load_workbook
+from openpyxl.styles import Font
 
 from scrapy import signals
 import pandas as pd
@@ -40,9 +41,23 @@ class LeftCompany(scrapy.Spider):
         c = ClientChanges()
         self.stats = c.start()
 
+        self.wb = load_workbook(self.excel_path)
+        self.left_sheet = self.wb.get_sheet_by_name('Companies_That_left')
+        self.new_sheet = self.wb.get_sheet_by_name('New_Companies')
+        self.new_sheet_write = self.wb.create_sheet('New', 0)
+        self.left_sheet_write = self.wb.create_sheet('Left', 1)
+
     def start_requests(self):
         wb = open_workbook(self.excel_path)
         sheet = wb.sheet_by_name('Companies_That_left')
+
+        # left_header_row = sheet.row_values(0)
+        # font = Font(size=11, bold=True)
+        # self.left_sheet_write.append(left_header_row)
+        # for i in ['A', 'B', 'C', 'D']:
+        #     c = self.left_sheet_write[i + '1']
+        #     c.font = font
+
         for i in range(1, sheet.nrows):
             row = sheet.row_values(i)
             company = row[1]
@@ -53,38 +68,84 @@ class LeftCompany(scrapy.Spider):
                 company_detail = [site, company, company_url, company_jobs]
                 yield scrapy.Request(
                     company_url, self.parse,
-                    meta={'company_detail': company_detail},
+                    meta={'company_detail': company_detail, 'type': 'removed'},
+                    dont_filter=True
+                )
+        # get links for new companies
+        new_sheet = wb.sheet_by_name('New_Companies')
+
+        new_header_row = new_sheet.row_values(0)
+        font = Font(size=11, bold=True)
+        self.new_sheet_write.append(new_header_row)
+        for i in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
+            c = self.new_sheet_write[i + '1']
+            c.font = font
+
+        for i in range(1, new_sheet.nrows):
+            new_row = new_sheet.row_values(i)
+            new_company = new_row[1]
+            new_site = new_row[0]
+            new_company_url = new_row[2]
+            new_company_jobs = new_row[3]
+            if new_company_url:
+                new_company_detail = [
+                    new_site, new_company, new_company_url, new_company_jobs]
+                yield scrapy.Request(
+                    new_company_url, self.parse,
+                    meta={'company_detail': new_company_detail, 'type': 'new'},
                     dont_filter=True
                 )
 
     def parse(self, response):
 
         company_detail = response.meta['company_detail']
+        if response.meta['type'] == 'removed':
+            drushimob_div = response.xpath("//div[@class='jobCount']")
+            alljobs_jobs_div = response.xpath("//div[@class='job-paging']")
+            jobmaster_jobs = response.xpath(
+                "//div[@class='CenterContent']/article")
 
-        drushimob_div = response.xpath("//div[@class='jobCount']")  # drushim
-        alljobs_jobs_div = response.xpath("//div[@class='job-paging']")
-        jobmaster_jobs = response.xpath(
-            "//div[@class='CenterContent']/article")
+            if (
+                drushimob_div or alljobs_jobs_div or jobmaster_jobs or
+                '/Search/' in response.url
+            ):
+                # wb = load_workbook(self.excel_path)
+                # sheet = wb.get_sheet_by_name('Companies_That_left')
 
-        if (
-            drushimob_div or alljobs_jobs_div or jobmaster_jobs or
-            '/Search/' in response.url
-        ):
-            wb = load_workbook(self.excel_path)
-            sheet = wb.get_sheet_by_name('Companies_That_left')
+                self.left_sheet.append(company_detail)
+                # self.wb.save(self.excel_path)
+        else:
+            # open alljobs
+            company_site_url = ''
+            if company_detail[0] == 'AllJobs':
+                try:
+                    company_site_url = response.xpath(
+                        "//div[@id='divTagCompanyCategory']/"
+                        "following-sibling::div"
+                    )[0].xpath("./a/text()").extract_first()
+                except:
+                    pass
 
-            sheet.append(company_detail)
-            wb.save(self.excel_path)
+            company_detail.extend([company_site_url, '', ''])
+            self.new_sheet_write.append(company_detail)
 
     def spider_closed(self, spider):
+        self.wb.remove_sheet(self.new_sheet)
+        self.new_sheet_write.title = "New_Companies"
+        self.wb.save(self.excel_path)
+
         new_companies_df = pd.read_excel(
-            self.excel_path, sheetname='New_Company')
+            self.excel_path, sheetname='New_Companies')
+        new_companies_df = new_companies_df.sort_values(
+            by=['Site', 'Company'])
         left_companies_df = pd.read_excel(
             self.excel_path, sheetname='Companies_That_left')
         left_companies_df = left_companies_df.drop_duplicates(keep=False)
+        left_companies_df = left_companies_df.sort_values(
+            by=['Site', 'Company'])
 
         writer = pd.ExcelWriter(self.excel_path, engine='openpyxl')
-        new_companies_df.to_excel(writer, 'New_Company', index=False)
+        new_companies_df.to_excel(writer, 'New_Companies', index=False)
         left_companies_df.to_excel(writer, 'Companies_That_left', index=False)
         writer.save()
 

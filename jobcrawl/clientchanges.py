@@ -18,7 +18,7 @@ class ClientChanges:
         self.today = datetime.date.today()
 
         """ For testing purpose will """
-        # self.today_str = "01/10/2016"
+        # self.today_str = "05/10/2016"
         # self.today = datetime.datetime.strptime(self.today_str, "%d/%m/%Y")
         """ End Testing """
 
@@ -103,7 +103,9 @@ class ClientChanges:
         # Remove duplicates
         writer = pd.ExcelWriter(self.excel_file_path)
         columns = ['Site', 'Company', 'Company_jobs', 'Num_Company_jobs']
-
+        new_columns = [
+            'Site', 'Company', 'Company_jobs', 'Num_Company_jobs',
+            'Company Site URL', 'Company Phone', 'Company Email']
         # Groupby site,company and crawl_date and transform total number
         # of jobs on particualr crawl
         # date for the each company of the each sites
@@ -128,9 +130,13 @@ class ClientChanges:
         df_new_companies = df_new_companies.sort_values(
             by=['Site', 'Company'])
 
+        df_new['Company Site URL'] = ""
+        df_new['Company Phone'] = ""
+        df_new['Company Email'] = ""
+
         df_new_companies.to_excel(
-            writer, index=False, sheet_name='New_Company',
-            columns=columns, encoding='utf-8')
+            writer, index=False, sheet_name='New_Companies',
+            columns=new_columns, encoding='utf-8')
 
         # ****** GET REMOVED COMPANIES ******
         # ***********************************
