@@ -46,8 +46,11 @@ class ClientChanges:
 
     def start(self):
         self.df_main = self.read_sql()
-        new_removed_stats = self.excel_writer()
-        total_stats = self.get_company_stats()
+        self.excel_writer()
+
+    def get_stats(self):
+        new_removed_stats = self.get_removed_stats()
+        total_stats = self.get_total_stats()
         new_removed_stats.update(total_stats)
         return new_removed_stats
 
@@ -84,7 +87,7 @@ class ClientChanges:
         )
         return df_main
 
-    def get_company_stats(self):
+    def get_total_stats(self):
         """ Read sql query (database table)  and return pandas dataframe"""
 
         conn = pymysql.connect(
@@ -178,16 +181,21 @@ class ClientChanges:
         # save the excel
         writer.save()
 
-        # get stats
+    def get_removed_stats(self):
         stats = {'new': {}, 'removed': {}}
+        df_new_companies = pd.read_excel(
+            self.excel_file_path, sheetname='New_Companies')
+        df_removed_companies = pd.read_excel(
+            self.excel_file_path, sheetname='Companies_That_left')
         for company in ["Drushim", "AllJobs", "JobMaster"]:
             stats['new'][company] = len(
                 df_new_companies[df_new_companies['Site'] == company])
             stats['removed'][company] = len(
                 df_removed_companies[df_removed_companies['Site'] == company])
-
         return stats
+
 
 if __name__ == '__main__':
     c = ClientChanges()
-    c.start()
+    # c.start()
+    c.get_stats()

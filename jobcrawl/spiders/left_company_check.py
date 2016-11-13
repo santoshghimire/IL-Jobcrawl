@@ -38,8 +38,8 @@ class LeftCompany(scrapy.Spider):
         sys.setdefaultencoding('utf-8')
 
         # prepare clientchanges report
-        c = ClientChanges()
-        self.stats = c.start()
+        self.c = ClientChanges()
+        self.c.start()
 
         self.wb = load_workbook(self.excel_path)
         self.left_sheet = self.wb.get_sheet_by_name('Companies_That_left')
@@ -153,6 +153,8 @@ class LeftCompany(scrapy.Spider):
         directory = 'daily_competitor_client_changes'
         file_name = '{}_Daily-Competitor-Client-Change.xlsx'.format(
             today_str)
+
+        self.stats = self.c.get_stats()
 
         body = """
             Please find the attachment for {subject}.

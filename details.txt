@@ -1,5 +1,5 @@
 1. Drushim - Client Change ,fix empty company rows, when no company page - place a single job page
->> Done
+>> To DO
 2. Check issue with None precise num of jobs in JobMaster
 >> To DO
 3. change name in client change file from New_Company to New_Companies
@@ -8,3 +8,6 @@
 - Company Site URL, Company Phone, Company Email
 For alljobs specifically add the company site url
 >> Done
+
+1. The removed companies number mismatch in email text.
+2. Sorting companies from largest to lowest no of jobs in client change. For new and removed both?
