@@ -10,4 +10,6 @@ For alljobs specifically add the company site url
 >> Done
 
 1. The removed companies number mismatch in email text.
+>> Done
 2. Sorting companies from largest to lowest no of jobs in client change. For new and removed both?
+>> Done

@@ -16,6 +16,7 @@ from jobcrawl.clientchanges import ClientChanges
 from excel_gen import generate_excel
 
 today = datetime.date.today()
+# today = datetime.date(2016, 10, 05)
 today_str = today.strftime("%Y_%m_%d")
 
 
@@ -50,13 +51,6 @@ class LeftCompany(scrapy.Spider):
     def start_requests(self):
         wb = open_workbook(self.excel_path)
         sheet = wb.sheet_by_name('Companies_That_left')
-
-        # left_header_row = sheet.row_values(0)
-        # font = Font(size=11, bold=True)
-        # self.left_sheet_write.append(left_header_row)
-        # for i in ['A', 'B', 'C', 'D']:
-        #     c = self.left_sheet_write[i + '1']
-        #     c.font = font
 
         for i in range(1, sheet.nrows):
             row = sheet.row_values(i)
@@ -109,11 +103,7 @@ class LeftCompany(scrapy.Spider):
                 drushimob_div or alljobs_jobs_div or jobmaster_jobs or
                 '/Search/' in response.url
             ):
-                # wb = load_workbook(self.excel_path)
-                # sheet = wb.get_sheet_by_name('Companies_That_left')
-
                 self.left_sheet.append(company_detail)
-                # self.wb.save(self.excel_path)
         else:
             # open alljobs
             company_site_url = ''
@@ -137,12 +127,16 @@ class LeftCompany(scrapy.Spider):
         new_companies_df = pd.read_excel(
             self.excel_path, sheetname='New_Companies')
         new_companies_df = new_companies_df.sort_values(
-            by=['Site', 'Company'])
+            by=['Site', 'Num_Company_jobs', 'Company'],
+            ascending=[True, False, True]
+        )
         left_companies_df = pd.read_excel(
             self.excel_path, sheetname='Companies_That_left')
         left_companies_df = left_companies_df.drop_duplicates(keep=False)
         left_companies_df = left_companies_df.sort_values(
-            by=['Site', 'Company'])
+            by=['Site', 'Num_Company_jobs', 'Company'],
+            ascending=[True, False, True]
+        )
 
         writer = pd.ExcelWriter(self.excel_path, engine='openpyxl')
         new_companies_df.to_excel(writer, 'New_Companies', index=False)
@@ -157,22 +151,22 @@ class LeftCompany(scrapy.Spider):
         self.stats = self.c.get_stats()
 
         body = """
-            Please find the attachment for {subject}.
+Please find the attachment for {subject}.
 
-            --- New / Removed Companies per Site ---
-            Drushim : (new) {drushim_new}, (removed) {drushim_removed}
-            JobMaster : (new) {jobmaster_new}, (removed) {jobmaster_removed}
-            AllJobs : (new) {alljobs_new}, (removed) {alljobs_removed}
+--- New / Removed Companies per Site ---
+Drushim : (new) {drushim_new}, (removed) {drushim_removed}
+JobMaster : (new) {jobmaster_new}, (removed) {jobmaster_removed}
+AllJobs : (new) {alljobs_new}, (removed) {alljobs_removed}
 
-            --- New Companies ---
-            Drushim : {drushim_new}
-            JobMaster : {jobmaster_new}
-            AllJobs : {alljobs_new}
+--- New Companies ---
+Drushim : {drushim_new}
+JobMaster : {jobmaster_new}
+AllJobs : {alljobs_new}
 
-            --- Removed Companies ---
-            Drushim : {drushim_removed}
-            JobMaster : {jobmaster_removed}
-            AllJobs : {alljobs_removed}
+--- Removed Companies ---
+Drushim : {drushim_removed}
+JobMaster : {jobmaster_removed}
+AllJobs : {alljobs_removed}
         """.format(
             subject=file_name, drushim_new=self.stats['new']['Drushim'],
             drushim_removed=self.stats['removed']['Drushim'],
@@ -204,22 +198,22 @@ class LeftCompany(scrapy.Spider):
         subject = '{}_Daily-List-Of-Competitor-Jobs.xlsx'.format(
             file_to_send[0][:10])
         body = """
-            Please find the attachment for {subject}.
+Please find the attachment for {subject}.
 
-            --- Jobs / Companies per Site ---
-            Drushim : (jobs) {drushim_jobs}, (companies) {drushim_companies}
-            JobMaster : (jobs) {jm_jobs}, (companies) {jm_companies}
-            AllJobs : (jobs) {alljobs_jobs}, (companies) {alljobs_companies}
+--- Jobs / Companies per Site ---
+Drushim : (jobs) {drushim_jobs}, (companies) {drushim_companies}
+JobMaster : (jobs) {jm_jobs}, (companies) {jm_companies}
+AllJobs : (jobs) {alljobs_jobs}, (companies) {alljobs_companies}
 
-            --- Jobs per Site ---
-            Drushim : {drushim_jobs} jobs
-            JobMaster : {jm_jobs} jobs
-            AllJobs : {alljobs_jobs} jobs
+--- Jobs per Site ---
+Drushim : {drushim_jobs} jobs
+JobMaster : {jm_jobs} jobs
+AllJobs : {alljobs_jobs} jobs
 
-            --- Companies per Site ---
-            Drushim : {drushim_companies} companies
-            JobMaster : {jm_companies} companies
-            AllJobs : {alljobs_companies} companies
+--- Companies per Site ---
+Drushim : {drushim_companies} companies
+JobMaster : {jm_companies} companies
+AllJobs : {alljobs_companies} companies
         """.format(
             subject=subject, drushim_jobs=self.stats['total_jobs']['Drushim'],
             drushim_companies=self.stats['total_companies']['Drushim'],

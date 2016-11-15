@@ -49,7 +49,6 @@ def send_email(directory, file_name, body, multi=False):
     server.starttls()
     server.login(username, password)
     server.sendmail(email_from, email_to.split(","), msg.as_string())
-
     print('***************************************************')
     print('Email Successfully Sent to {} '.format(email_to))
     print('***************************************************')
