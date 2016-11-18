@@ -1,7 +1,7 @@
 1. Drushim - Client Change ,fix empty company rows, when no company page - place a single job page
->> To DO
+>> To DO ()
 2. Check issue with None precise num of jobs in JobMaster
->> To DO
+>> To DO (Optional)
 3. change name in client change file from New_Company to New_Companies
 >> Done
 4.  Add 3 new columns in the client change file

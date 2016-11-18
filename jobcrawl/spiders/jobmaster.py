@@ -47,16 +47,8 @@ class JobmasterSpider(scrapy.Spider):
         if response.status != 200:
             self.logger.error("{}\n ERROR Code {}: {} \n {}".format(
                 "*" * 30, response.status, response.url, "*" * 30))
-        else:
-            self.logger.info(
-                "{}\n  Status Code {} OK: {} \n {}".format(
-                    "*" * 30, response.status, response.url, "*" * 30))
-
-        # inspect_response(response, self)
-
         job_article_div_list = response.xpath(
-            "//article[@class='CardStyle JobItem font14 noWrap']")
-
+            "//article[@class='CardStyle JobItem font14']")
         for job_article in job_article_div_list:
             job_article_id = job_article.xpath(".//@id").extract_first()
             job_id_group = re.findall(r'[\d]+', job_article_id)
@@ -184,9 +176,7 @@ class JobmasterSpider(scrapy.Spider):
                 'AllJobs_Job_class': "",
                 'unique_id': 'jobmaster_{}'.format(job_id)
             }
-
             yield item
-
         pagi_link_sel_list = response.xpath("//a[@class='paging']")
 
         for pagi_link_sel in pagi_link_sel_list:
