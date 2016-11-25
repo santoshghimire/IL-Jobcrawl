@@ -115,9 +115,35 @@ def combile_files(email=False):
 
         send_email(directory=directory, file_name=file_name, body=body)
 
+today = datetime.date.today()
+# today = datetime.date(2016, 10, 05)
+today_str = today.strftime("%Y_%m_%d")
+
+
+def clean_residual_data():
+    base_path = os.path.dirname(os.path.realpath(__file__))
+    data_path = '{0}/{1}'.format(base_path, 'IL-jobcrawl-data')
+    client_path = '{0}/{1}'.format(
+        base_path, 'daily_competitor_client_changes')
+    logs_path = '{0}/{1}'.format(base_path, 'logs')
+
+    # Generate range of dates for a week
+    date_range = []
+    for i in range(10):
+        item = (today - datetime.timedelta(days=i)).strftime("%Y_%m_%d")
+        date_range.append(item)
+
+    for each_dir in [data_path, client_path, logs_path]:
+        for each_file in os.listdir(each_dir):
+            new_file = each_file.replace('scrapy_log_output_', '')
+            file_date = new_file[:10]
+            if file_date not in date_range:
+                os.remove("{0}/{1}".format(each_dir, each_file))
+
 
 if __name__ == '__main__':
     # combile_files(email=True)
-    generate_excel("Alljobs")
+    # generate_excel("Alljobs")
     # generate_excel("Jobmaster")
     # generate_excel("Drushim")
+    clean_residual_data()

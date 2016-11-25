@@ -178,3 +178,18 @@ class ClientChanges:
 
         # save the excel
         writer.save()
+
+    def clean_residual_database(self, month_range):
+        format_strings = ','.join(['"%s"'] * len(month_range))
+        sql = """DELETE FROM sites_datas
+            WHERE Crawl_Date NOT IN (%s)""" % format_strings
+        sql = sql % tuple(month_range)
+        try:
+            with self.conn.cursor() as cursor:
+                # Create a new record
+                cursor.execute(sql)
+            # connection is not autocommit by default.
+            # So you must commit to save your changes.
+            self.conn.commit()
+        finally:
+            self.conn.close()

@@ -24,8 +24,8 @@ class ClientChanges:
         self.today = datetime.date.today()
 
         """ For testing purpose will """
-        self.today_str = "05/10/2016"
-        self.today = datetime.datetime.strptime(self.today_str, "%d/%m/%Y")
+        # self.today_str = "05/10/2016"
+        # self.today = datetime.datetime.strptime(self.today_str, "%d/%m/%Y")
         """ End Testing """
 
         self.today_str = self.today.strftime("%d/%m/%Y")
@@ -194,8 +194,36 @@ class ClientChanges:
                 df_removed_companies[df_removed_companies['Site'] == company])
         return stats
 
+    def clean_residual_database(self, month_range):
+        format_strings = ','.join(['"%s"'] * len(month_range))
+        conn = pymysql.connect(
+            host=settings.get('MYSQL_HOST'), port=3306,
+            user=settings.get('MYSQL_USER'),
+            passwd=settings.get('MYSQL_PASSWORD'),
+            db=settings.get('MYSQL_DBNAME'),
+            charset='utf8'
+        )
+        sql = """DELETE FROM sites_datas WHERE Crawl_Date NOT IN (%s)""" % format_strings
+        sql = sql % tuple(month_range)
+        try:
+            with conn.cursor() as cursor:
+                # Create a new record
+                cursor.execute(sql)
+            # connection is not autocommit by default.
+            # So you must commit to save your changes.
+            conn.commit()
+        finally:
+            conn.close()
+
 
 if __name__ == '__main__':
     c = ClientChanges()
     # c.start()
-    c.get_stats()
+    # c.get_stats()
+    month_range = []
+    for i in range(70):
+        item = (c.today - datetime.timedelta(days=i)).strftime("%d/%m/%Y")
+        month_range.append(item)
+    # print(month_range)
+    c.clean_residual_database(month_range)
+    print('success')

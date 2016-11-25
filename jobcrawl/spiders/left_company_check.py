@@ -2,6 +2,7 @@ import sys
 import codecs
 import scrapy
 import locale
+import os
 from xlrd import open_workbook
 from openpyxl import load_workbook
 from openpyxl.styles import Font
@@ -225,3 +226,31 @@ AllJobs : {alljobs_companies} companies
 
         send_email(
             directory=directory, file_name=file_to_send, body=body, multi=True)
+        # delete old files
+        self.clean_residual_data()
+
+    def clean_residual_data(self):
+        base_path = os.path.dirname(os.path.realpath(__file__))
+        data_path = '{0}/{1}'.format(base_path, 'IL-jobcrawl-data')
+        client_path = '{0}/{1}'.format(
+            base_path, 'daily_competitor_client_changes')
+        logs_path = '{0}/{1}'.format(base_path, 'logs')
+
+        # Generate range of dates for 10 days
+        date_range = []
+        for i in range(10):
+            item = (today - datetime.timedelta(days=i)).strftime("%Y_%m_%d")
+            date_range.append(item)
+
+        month_range = []
+        for i in range(30):
+            item = (today - datetime.timedelta(days=i)).strftime("%d/%m/%Y")
+            month_range.append(item)
+
+        for each_dir in [data_path, client_path, logs_path]:
+            for each_file in os.listdir(each_dir):
+                new_file = each_file.replace('scrapy_log_output_', '')
+                file_date = new_file[:10]
+                if file_date not in date_range:
+                    os.remove("{0}/{1}".format(each_dir, each_file))
+        self.c.clean_residual_database(month_range)
