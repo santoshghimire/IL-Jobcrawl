@@ -102,3 +102,6 @@ scrapy_log_output*
 left_companies.py
 get_companies.py
 logs
+details.txt
+text_*
+bad*
