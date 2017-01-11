@@ -84,7 +84,7 @@ class ClientChanges:
     def get_total_stats(self):
         """ Read sql query (database table)  and return pandas dataframe"""
         data = {'total_jobs': {}, 'total_companies': {}}
-        for company in ["Drushim", "AllJobs", "JobMaster"]:
+        for company in ["Drushim", "AllJobs", "JobMaster", "JobNet"]:
             sql = """select count(*) as count from sites_datas where
                 Site= "%s" and
                 Crawl_Date= "%s";""" % (company, self.today_str)
@@ -107,7 +107,7 @@ class ClientChanges:
             self.excel_file_path, sheetname='New_Companies')
         df_removed_companies = pd.read_excel(
             self.excel_file_path, sheetname='Companies_That_left')
-        for company in ["Drushim", "AllJobs", "JobMaster"]:
+        for company in ["Drushim", "AllJobs", "JobMaster", "JobNet"]:
             stats['new'][company] = len(
                 df_new_companies[df_new_companies['Site'] == company])
             stats['removed'][company] = len(

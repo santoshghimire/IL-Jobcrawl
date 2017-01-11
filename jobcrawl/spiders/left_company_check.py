@@ -24,7 +24,10 @@ today_str = today.strftime("%Y_%m_%d")
 class LeftCompany(scrapy.Spider):
     """ Spider to verify removed companies """
     name = "left"
-    allowed_domains = ["jobmaster.co.il", "drushim.co.il", "alljobs.co.il"]
+    allowed_domains = [
+        "jobmaster.co.il", "drushim.co.il", "alljobs.co.il",
+        "jobnet.co.il"
+    ]
 
     start_urls = []
     excel_dir = 'daily_competitor_client_changes'
@@ -99,10 +102,10 @@ class LeftCompany(scrapy.Spider):
             alljobs_jobs_div = response.xpath("//div[@class='job-paging']")
             jobmaster_jobs = response.xpath(
                 "//div[@class='CenterContent']/article")
-
+            jobnet_jobs = response.xpath("//div[@typeof='JobPosting']")
             if (
                 drushimob_div or alljobs_jobs_div or jobmaster_jobs or
-                '/Search/' in response.url
+                jobnet_jobs or '/Search/' in response.url
             ):
                 self.left_sheet.append(company_detail)
         else:
@@ -158,23 +161,28 @@ Please find the attachment for {subject}.
 Drushim : (new) {drushim_new}, (removed) {drushim_removed}
 JobMaster : (new) {jobmaster_new}, (removed) {jobmaster_removed}
 AllJobs : (new) {alljobs_new}, (removed) {alljobs_removed}
+JobNet : (new) {jobnet_new}, (removed) {jobnet_removed}
 
 --- New Companies ---
 Drushim : {drushim_new}
 JobMaster : {jobmaster_new}
 AllJobs : {alljobs_new}
+JobNet : {jobnet_new}
 
 --- Removed Companies ---
 Drushim : {drushim_removed}
 JobMaster : {jobmaster_removed}
 AllJobs : {alljobs_removed}
+JobNet : {jobnet_removed}
         """.format(
             subject=file_name, drushim_new=self.stats['new']['Drushim'],
             drushim_removed=self.stats['removed']['Drushim'],
             jobmaster_new=self.stats['new']['JobMaster'],
             jobmaster_removed=self.stats['removed']['JobMaster'],
             alljobs_new=self.stats['new']['AllJobs'],
-            alljobs_removed=self.stats['removed']['AllJobs']
+            alljobs_removed=self.stats['removed']['AllJobs'],
+            jobnet_new=self.stats['new']['JobNet'],
+            jobnet_removed=self.stats['removed']['JobNet']
         )
 
         send_email(directory=directory, file_name=file_name, body=body)
@@ -182,7 +190,7 @@ AllJobs : {alljobs_removed}
         # send an email for 3 excel attachments
         directory = "IL-jobcrawl-data"
         file_to_send = []
-        for site in ['Drushim', 'Alljobs', 'Jobmaster']:
+        for site in ['Drushim', 'Alljobs', 'Jobmaster', 'Jobnet']:
             file_name = '{}_{}.xlsx'.format(
                 today_str, site)
             # check if the file is corrupt
@@ -205,23 +213,28 @@ Please find the attachment for {subject}.
 Drushim : (jobs) {drushim_jobs}, (companies) {drushim_companies}
 JobMaster : (jobs) {jm_jobs}, (companies) {jm_companies}
 AllJobs : (jobs) {alljobs_jobs}, (companies) {alljobs_companies}
+JobNet : (jobs) {jobnet_jobs}, (companies) {jobnet_companies}
 
 --- Jobs per Site ---
 Drushim : {drushim_jobs} jobs
 JobMaster : {jm_jobs} jobs
 AllJobs : {alljobs_jobs} jobs
+JobNet : {jobnet_jobs} jobs
 
 --- Companies per Site ---
 Drushim : {drushim_companies} companies
 JobMaster : {jm_companies} companies
 AllJobs : {alljobs_companies} companies
+JobNet : {jobnet_companies} companies
         """.format(
             subject=subject, drushim_jobs=self.stats['total_jobs']['Drushim'],
             drushim_companies=self.stats['total_companies']['Drushim'],
             jm_jobs=self.stats['total_jobs']['JobMaster'],
             jm_companies=self.stats['total_companies']['JobMaster'],
             alljobs_jobs=self.stats['total_jobs']['AllJobs'],
-            alljobs_companies=self.stats['total_companies']['AllJobs']
+            alljobs_companies=self.stats['total_companies']['AllJobs'],
+            jobnet_jobs=self.stats['total_jobs']['JobNet'],
+            jobnet_companies=self.stats['total_companies']['JobNet']
         )
 
         send_email(
