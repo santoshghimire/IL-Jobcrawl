@@ -243,7 +243,10 @@ JobNet : {jobnet_companies} companies
         self.clean_residual_data()
 
     def clean_residual_data(self):
-        base_path = os.path.dirname(os.path.realpath(__file__))
+        base_path = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), os.pardir)
+        base_path = os.path.abspath(os.path.join(base_path, os.pardir))
+
         data_path = '{0}/{1}'.format(base_path, 'IL-jobcrawl-data')
         client_path = '{0}/{1}'.format(
             base_path, 'daily_competitor_client_changes')
@@ -265,5 +268,6 @@ JobNet : {jobnet_companies} companies
                 new_file = each_file.replace('scrapy_log_output_', '')
                 file_date = new_file[:10]
                 if file_date not in date_range:
-                    os.remove("{0}/{1}".format(each_dir, each_file))
+                    file_path = os.path.join(each_dir, each_file)
+                    os.remove(file_path)
         self.c.clean_residual_database(month_range)

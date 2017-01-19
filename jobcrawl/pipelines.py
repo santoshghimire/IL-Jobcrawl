@@ -9,7 +9,6 @@ import sys
 import locale
 import codecs
 import pymysql
-from twisted.enterprise import adbapi
 from scrapy.exceptions import DropItem
 import datetime
 from openpyxl import Workbook
@@ -17,30 +16,32 @@ from openpyxl import Workbook
 today = datetime.date.today()
 today_str = today.strftime("%Y_%m_%d")
 
-pymysql.install_as_MySQLdb()
-
-
 directory = "./IL-jobcrawl-data"
 
 
 class JobscrawlerPipeline(object):
 
-    def __init__(self, dbpool):
-        self.dbpool = dbpool
-        self.ids_seen = set()
+    def __init__(self, db_setting):
+        self.conn = pymysql.connect(
+            host=db_setting['host'],
+            port=3306,
+            user=db_setting['user'],
+            passwd=db_setting['passwd'],
+            db=db_setting['db'],
+            charset='utf8'
+        )
+        self.cur = self.conn.cursor()
 
     @classmethod
-    def from_settings(cls, settings):
-        dbargs = dict(
-            host=settings['MYSQL_HOST'],
-            db=settings['MYSQL_DBNAME'],
-            user=settings['MYSQL_USER'],
-            password=settings['MYSQL_PASSWORD'],
-            charset='utf8',
-            use_unicode=True,
-        )
-        dbpool = adbapi.ConnectionPool('MySQLdb', **dbargs)
-        return cls(dbpool)
+    def from_crawler(cls, crawler):
+        settings = crawler.settings
+        db_setting = {
+            'host': settings.get("MYSQL_HOST"),
+            'user': settings.get('MYSQL_USER'),
+            'passwd': settings.get('MYSQL_PASSWORD'),
+            'db': settings.get('MYSQL_DBNAME')
+        }
+        return cls(db_setting)
 
     def open_spider(self, spider):
         if spider.name != 'left':
@@ -73,74 +74,67 @@ class JobscrawlerPipeline(object):
         if spider.name != 'left':
             crawl_date = datetime.date.today()
             crawl_date_str = crawl_date.strftime("%d/%m/%Y")
-            if item['Job']['unique_id'] in self.ids_seen:
-                raise DropItem(
-                    "+" * 100 + "\n" + "Duplicate item found: %s" % item +
-                    "\n" + "+" * 100)
-            else:
-                self.ids_seen.add(item['Job']['unique_id'])
-                dbpool = self.dbpool.runInteraction(self.insert, item, spider)
-                dbpool.addErrback(self.handle_error, item, spider)
-                dbpool.addBoth(lambda _: item)
 
-                self.ws.append([
-                    item['Job']['Site'], item['Job']['Company'],
-                    item['Job']['Company_jobs'], item['Job']['Job_id'],
-                    item['Job']['Job_title'], item['Job']['Job_Description'],
-                    item['Job']['Job_Post_Date'], item['Job']['Job_URL'],
-                    item['Job']['Country_Areas'],
-                    item['Job']['Job_categories'],
-                    item['Job']['AllJobs_Job_class'], crawl_date_str,
-                    item['Job']['unique_id']
-                ])
-                return dbpool
-
-    def insert(self, conn, item, spider):
-        if spider.name != 'left':
-            crawl_date = datetime.date.today()
-            crawl_date_str = crawl_date.strftime("%d/%m/%Y")
-
-            conn.execute("""
-                INSERT INTO sites_datas(
-                Site,
-                Company,
-                Company_jobs,
-                Job_id,
-                Job_title,
-                Job_Description,
-                Job_Post_Date,
-                Job_URL,
-                Country_Areas,
-                Job_categories,
-                AllJobs_Job_class,
-                Crawl_Date,
-                unique_id
-                )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s, %s)
-            """, (
-                item['Job']['Site'],
-                item['Job']['Company'],
-                item['Job']['Company_jobs'],
-                item['Job']['Job_id'],
-                item['Job']['Job_title'],
-                item['Job']['Job_Description'],
-                item['Job']['Job_Post_Date'],
-                item['Job']['Job_URL'],
+            self.ws.append([
+                item['Job']['Site'], item['Job']['Company'],
+                item['Job']['Company_jobs'], item['Job']['Job_id'],
+                item['Job']['Job_title'], item['Job']['Job_Description'],
+                item['Job']['Job_Post_Date'], item['Job']['Job_URL'],
                 item['Job']['Country_Areas'],
                 item['Job']['Job_categories'],
-                item['Job']['AllJobs_Job_class'],
-                crawl_date_str,
+                item['Job']['AllJobs_Job_class'], crawl_date_str,
                 item['Job']['unique_id']
+            ])
 
-            ))
-            spider.log("Item stored in dbSchema: %s %r" % (
-                item['Job']['Job_id'], item))
+            # insert item
+            crawl_date = datetime.date.today()
+            crawl_date_str = crawl_date.strftime("%d/%m/%Y")
+            try:
+                self.cur.execute("""
+                    INSERT INTO sites_datas(
+                    Site,
+                    Company,
+                    Company_jobs,
+                    Job_id,
+                    Job_title,
+                    Job_Description,
+                    Job_Post_Date,
+                    Job_URL,
+                    Country_Areas,
+                    Job_categories,
+                    AllJobs_Job_class,
+                    Crawl_Date,
+                    unique_id
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s, %s)
+                """, (
+                    item['Job']['Site'],
+                    item['Job']['Company'],
+                    item['Job']['Company_jobs'],
+                    item['Job']['Job_id'],
+                    item['Job']['Job_title'],
+                    item['Job']['Job_Description'],
+                    item['Job']['Job_Post_Date'],
+                    item['Job']['Job_URL'],
+                    item['Job']['Country_Areas'],
+                    item['Job']['Job_categories'],
+                    item['Job']['AllJobs_Job_class'],
+                    crawl_date_str,
+                    item['Job']['unique_id']
+                ))
+                self.conn.commit()
+            except pymysql.err.IntegrityError:
+                raise DropItem(
+                    "\n" + "+" * 50 + "\n" +
+                    "Duplicate item found: %s" % item +
+                    "\n" + "+" * 50)
+            return item
 
     def close_spider(self, spider):
         if spider.name != 'left':
             # save each spider excel file
             self.workbook.save(self.temp_each_site_excel_file_path)
-
-    def handle_error(self, failure, item, spider):
-        """Handle occurred on dbSchema interaction."""
-        self.logger.info("DB Schema Handled")
+        try:
+            self.conn.close()
+        except:
+            pass
