@@ -67,7 +67,7 @@ class JobNetSpider(scrapy.Spider):
             )
 
             job_heads = job_container.xpath(
-                ".//div[@class='jobContainerInfo GoldJob']"
+                ".//div[contains(@class, 'jobContainerInfo')]"
                 "/p[@class='headLines']/text()"
             ).extract()
             job_description = []
@@ -78,7 +78,7 @@ class JobNetSpider(scrapy.Spider):
             except:
                 pass
             job_desc = job_container.xpath(
-                ".//div[@class='jobContainerInfo GoldJob']"
+                ".//div[contains(@class, 'jobContainerInfo')]"
                 "/i[@property='description']"
             ).xpath("normalize-space(string())").extract_first()
             if job_desc:
@@ -90,13 +90,12 @@ class JobNetSpider(scrapy.Spider):
             except:
                 pass
             job_skills = job_container.xpath(
-                ".//div[@class='jobContainerInfo GoldJob']"
+                ".//div[contains(@class, 'jobContainerInfo')]"
                 "/i[@property='skills']"
             ).xpath("normalize-space(string())").extract_first()
             if job_skills:
                 job_description.append(job_skills.strip())
             job_description = "\n".join(job_description)
-
             country_areas = job_container.xpath(
                 ".//div[@class='jobContainerLocation']/i"
             ).xpath("normalize-space(string())").extract_first()
@@ -118,8 +117,6 @@ class JobNetSpider(scrapy.Spider):
                 'AllJobs_Job_class': '',
                 'unique_id': 'jobnet_{}'.format(job_id)
             }
-            # if not job_description:
-            #     print(job_link)
             yield item
 
         # handling pagination
