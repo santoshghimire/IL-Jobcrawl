@@ -17,6 +17,31 @@ username = settings.SMTP_USERNAME
 password = settings.SMTP_PASSWORD
 
 
+def send_plain_email(subject, body, to=None, multi=False):
+    msg = MIMEMultipart()
+    msg["From"] = email_from
+    if to:
+        msg["To"] = to
+    else:
+        email_to = settings.EMAIL_TO
+        email_to = email_to.split(',')[0]
+        msg["To"] = email_to
+    msg["Subject"] = subject
+    msg.preamble = subject
+    textpart = MIMEText(body, 'plain')
+
+    msg.attach(textpart)
+
+    server = smtplib.SMTP("{}:{}".format(smtp_server, smtp_port))
+    server.starttls()
+    server.login(username, password)
+    server.sendmail(email_from, email_to.split(","), msg.as_string())
+    print('***************************************************')
+    print('Email Successfully Sent to {} '.format(email_to))
+    print('***************************************************')
+    server.quit()
+
+
 def send_email(directory, file_name, body, multi=False):
     if multi:
         file_to_send = ["{}/{}".format(directory, i) for i in file_name]
