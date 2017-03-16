@@ -31,6 +31,7 @@ class JobscrawlerPipeline(object):
             charset='utf8'
         )
         self.cur = self.conn.cursor()
+        # self.ids_seen = set()
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -74,21 +75,7 @@ class JobscrawlerPipeline(object):
         if spider.name != 'left':
             crawl_date = datetime.date.today()
             crawl_date_str = crawl_date.strftime("%d/%m/%Y")
-
-            self.ws.append([
-                item['Job']['Site'], item['Job']['Company'],
-                item['Job']['Company_jobs'], item['Job']['Job_id'],
-                item['Job']['Job_title'], item['Job']['Job_Description'],
-                item['Job']['Job_Post_Date'], item['Job']['Job_URL'],
-                item['Job']['Country_Areas'],
-                item['Job']['Job_categories'],
-                item['Job']['AllJobs_Job_class'], crawl_date_str,
-                item['Job']['unique_id']
-            ])
-
             # insert item
-            crawl_date = datetime.date.today()
-            crawl_date_str = crawl_date.strftime("%d/%m/%Y")
             try:
                 self.cur.execute("""
                     INSERT INTO sites_datas(
@@ -128,6 +115,18 @@ class JobscrawlerPipeline(object):
                     "\n" + "+" * 50 + "\n" +
                     "Duplicate item found: %s" % item +
                     "\n" + "+" * 50)
+
+            # write to excel
+            self.ws.append([
+                item['Job']['Site'], item['Job']['Company'],
+                item['Job']['Company_jobs'], item['Job']['Job_id'],
+                item['Job']['Job_title'], item['Job']['Job_Description'],
+                item['Job']['Job_Post_Date'], item['Job']['Job_URL'],
+                item['Job']['Country_Areas'],
+                item['Job']['Job_categories'],
+                item['Job']['AllJobs_Job_class'], crawl_date_str,
+                item['Job']['unique_id']
+            ])
             return item
 
     def close_spider(self, spider):
