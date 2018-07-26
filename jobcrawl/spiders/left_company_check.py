@@ -12,7 +12,7 @@ import pandas as pd
 import datetime
 from scrapy.xlib.pydispatch import dispatcher
 
-from jobcrawl.mailer import send_email, send_plain_email
+from jobcrawl.mailer import send_email  # , send_plain_email
 from jobcrawl.clientchanges import ClientChanges
 from excel_gen import generate_excel
 
@@ -153,21 +153,21 @@ class LeftCompany(scrapy.Spider):
             today_str)
 
         self.stats = self.c.get_stats()
-        condition = (
-            self.stats['total_jobs']['Drushim'] and
-            self.stats['total_jobs']['JobMaster'] and
-            self.stats['total_jobs']['AllJobs'] and
-            self.stats['total_jobs']['JobNet']
-        )
-        if not condition:
-            # file corrupt
-            send_plain_email(
-                subject="IL Job site data corrupt",
-                body="Data corrupt for {}. Please check.".format(
-                    today_str
-                )
-            )
-            return
+        # condition = (
+        #     self.stats['total_jobs']['Drushim'] and
+        #     self.stats['total_jobs']['JobMaster'] and
+        #     self.stats['total_jobs']['AllJobs'] and
+        #     self.stats['total_jobs']['JobNet']
+        # )
+        # if not condition:
+        #     # file corrupt
+        #     send_plain_email(
+        #         subject="IL Job site data corrupt",
+        #         body="Data corrupt for {}. Please check.".format(
+        #             today_str
+        #         )
+        #     )
+        #     return
 
         body = """
 Please find the attachment for {subject}.

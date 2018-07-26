@@ -1,5 +1,6 @@
 import re
 import sys
+import time
 import codecs
 import scrapy
 import locale
@@ -24,27 +25,6 @@ class AllJobsSpider(scrapy.Spider):
         sys.setdefaultencoding('utf-8')
 
     def parse(self, response):
-        """ Parse Each location Link and Extract Each job in this location"""
-
-        total_pages_sel = response.xpath(
-            '//div[@class="jobs-paging-tp"]/text()').extract_first()
-
-        try:
-            total_pages = int(re.findall(r'[\d]+', total_pages_sel)[0])
-        except:
-            total_pages = 2000
-
-        # total_pages = 10
-        for i in range(total_pages):
-            page_link = "http://www.alljobs.co.il/SearchResultsGuest.aspx?" \
-                        "page=%s&position=&type=&freetxt=&city=&region=" \
-                        % str(i + 1)
-            yield scrapy.Request(
-                page_link, self.parse_each_page,
-                dont_filter=True)
-
-    def parse_each_page(self, response):
-        # inspect_response(response,self)
         if response.status != 200:
             self.logger.error("{}\n ERROR Code {}: {} \n {}".format(
                 "*" * 30, response.status, response.url, "*" * 30)
@@ -93,7 +73,7 @@ class AllJobsSpider(scrapy.Spider):
 
             try:
                 company = job_item_sel.xpath(
-                    './/div[@class="T14"]/a/text()').extract_first()
+                    './/div[@class="T14"]/text()').extract_first()
             except:
                 company = ""
 
@@ -157,3 +137,10 @@ class AllJobsSpider(scrapy.Spider):
             }
 
             yield item
+
+        next_page = response.xpath('//div[@class="jobs-paging-next"]'
+            '/a/@href').extract_first()
+        if next_page:
+            time.sleep(1)
+            yield scrapy.Request(
+                response.urljoin(next_page), self.parse, dont_filter=True)

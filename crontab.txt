@@ -1,0 +1,13 @@
+PATH=/usr/local/bin
+0 0 * * * cd /root/scraping/IL-Jobcrawl && scrapy crawl jobmaster
+PATH=/usr/local/bin
+0 2 * * * cd /root/scraping/IL-Jobcrawl && scrapy crawl alljobs
+PATH=/usr/local/bin
+30 2 * * * cd /root/scraping/IL-Jobcrawl && scrapy crawl drushim
+PATH=/usr/local/bin
+30 3 * * * cd /root/scraping/IL-Jobcrawl && scrapy crawl jobnet
+PATH=/usr/local/bin
+30 4 * * * cd /root/scraping/IL-Jobcrawl && scrapy crawl left
+
+#PATH=/usr/bin
+#30 2 * * * cd /root/scraping/IL-Jobcrawl && python runner.py

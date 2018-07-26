@@ -13,7 +13,7 @@ class JobmasterSpider(scrapy.Spider):
     name = "jobmaster"
     allowed_domains = ["http://www.jobmaster.co.il/"]
     start_urls = (
-        'http://www.jobmaster.co.il/code/home/home.asp?sType=mikumMisra',
+        'http://www.jobmaster.co.il/',
     )
 
     def __init__(self):
@@ -32,7 +32,7 @@ class JobmasterSpider(scrapy.Spider):
         Get all the links for Location
         """
         job_location_links_list = response.xpath(
-            "//a[contains(@href,'/check/search.asp?ezor=')]/@href").extract()
+            "//a[contains(@href,'/jobs/?bigarea=')]/@href").extract()
 
         for location_li in job_location_links_list:
             self.total_locations += 1
@@ -60,7 +60,7 @@ class JobmasterSpider(scrapy.Spider):
                 job_id = ""
                 job_link = ""
 
-            job_item_sel = job_article.xpath(".//div[@class='JobItemRight']")
+            job_item_sel = job_article.xpath(".//div[@class='JobItemRight Transition']")
             try:
                 job_title = job_item_sel.xpath(
                     ".//div[@class='CardHeader']/text()").extract_first()
@@ -69,17 +69,17 @@ class JobmasterSpider(scrapy.Spider):
 
             try:
                 company = job_item_sel.xpath(
-                    ".//a[@class='font14 ByTitle']/text()").extract_first()
+                    ".//a[@class='font14 CompanyNameLink']/text()").extract_first()
                 if not company:
                     company = job_item_sel.xpath(
-                        ".//span[@class='font14 ByTitle']/text()"
+                        ".//span[@class='font14 CompanyNameLink']/text()"
                     ).extract_first()
             except:
                 company = ""
 
             try:
                 company_jobs = job_item_sel.xpath(
-                    ".//a[@class='font14 ByTitle']/@href").extract_first()
+                    ".//a[@class='font14 CompanyNameLink']/@href").extract_first()
                 if company_jobs:
                     company_jobs = response.urljoin(company_jobs)
             except:
