@@ -2,6 +2,7 @@ import sys
 import codecs
 import scrapy
 import locale
+import time
 import os
 from xlrd import open_workbook
 from openpyxl import load_workbook
@@ -64,6 +65,7 @@ class LeftCompany(scrapy.Spider):
             company_jobs = row[3]
             if company_url:
                 company_detail = [site, company, company_url, company_jobs]
+                time.sleep(0.5)
                 yield scrapy.Request(
                     company_url, self.parse,
                     meta={'company_detail': company_detail, 'type': 'removed'},
@@ -88,6 +90,7 @@ class LeftCompany(scrapy.Spider):
             if new_company_url:
                 new_company_detail = [
                     new_site, new_company, new_company_url, new_company_jobs]
+                time.sleep(0.5)
                 yield scrapy.Request(
                     new_company_url, self.parse,
                     meta={'company_detail': new_company_detail, 'type': 'new'},
