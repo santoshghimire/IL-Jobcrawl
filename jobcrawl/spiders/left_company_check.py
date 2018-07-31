@@ -149,13 +149,14 @@ class LeftCompany(scrapy.Spider):
         new_companies_df.to_excel(writer, 'New_Companies', index=False)
         left_companies_df.to_excel(writer, 'Companies_That_left', index=False)
         writer.save()
-
+        self.logger.info('Saved clientchange sheet.')
         # send email for competitior changes
         directory = 'daily_competitor_client_changes'
         file_name = '{}_Daily-Competitor-Client-Change.xlsx'.format(
             today_str)
 
         self.stats = self.c.get_stats()
+        self.logger.info('Obtained stats')
         # condition = (
         #     self.stats['total_jobs']['Drushim'] and
         #     self.stats['total_jobs']['JobMaster'] and
@@ -204,7 +205,7 @@ JobNet : {jobnet_removed}
         )
 
         send_email(directory=directory, file_name=file_name, body=body)
-
+        self.logger.info('Client change email sent')
         # send an email for 3 excel attachments
         directory = "IL-jobcrawl-data"
         file_to_send = []
@@ -214,12 +215,12 @@ JobNet : {jobnet_removed}
             # check if the file is corrupt
             try:
                 load_workbook('{}/{}'.format(directory, file_name))
-                print('{} File good'.format(site))
+                self.log.info('{} File good'.format(site))
             except:
-                print('{} file corrupt, regenerationg'.format(site))
+                self.log.info('{} file corrupt, regenerationg'.format(site))
                 # file is corrupt, generate from sql
                 generate_excel(site)
-                print('{} File generation success'.format(site))
+                self.log.info('{} File generation success'.format(site))
             file_to_send.append(file_name)
 
         subject = '{}_Daily-List-Of-Competitor-Jobs.xlsx'.format(
@@ -257,8 +258,11 @@ JobNet : {jobnet_companies} companies
 
         send_email(
             directory=directory, file_name=file_to_send, body=body, multi=True)
+        self.logger.info('Job list email sent')
         # delete old files
         self.clean_residual_data()
+        self.logger.info('Residual data cleaned')
+        self.logger.info('All done')
 
     def clean_residual_data(self):
         base_path = os.path.join(os.path.dirname(
