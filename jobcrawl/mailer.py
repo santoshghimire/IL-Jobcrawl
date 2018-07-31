@@ -1,4 +1,5 @@
 import smtplib
+import logging
 import mimetypes
 from email.mime.multipart import MIMEMultipart
 from email import encoders
@@ -36,9 +37,10 @@ def send_plain_email(subject, body, to=None, multi=False):
     server.starttls()
     server.login(username, password)
     server.sendmail(email_from, email_to.split(","), msg.as_string())
-    print('***************************************************')
-    print('Email Successfully Sent to {} '.format(email_to))
-    print('***************************************************')
+    logging.info('***************************************************')
+    logging.info('Email Successfully Sent to {} .'
+        'subject={}, body={}'.format(email_to, subject, body))
+    logging.info('***************************************************')
     server.quit()
 
 
@@ -74,9 +76,11 @@ def send_email(directory, file_name, body, multi=False):
     server.starttls()
     server.login(username, password)
     server.sendmail(email_from, email_to.split(","), msg.as_string())
-    print('***************************************************')
-    print('Email Successfully Sent to {} '.format(email_to))
-    print('***************************************************')
+    logging.info('***************************************************')
+    logging.info('Email Successfully Sent to {} .'
+        'directory={}, file_name={}, body={}'
+        ''.format(email_to, directory, file_name, body))
+    logging.info('***************************************************')
     server.quit()
 
 
