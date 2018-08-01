@@ -215,12 +215,12 @@ JobNet : {jobnet_removed}
             # check if the file is corrupt
             try:
                 load_workbook('{}/{}'.format(directory, file_name))
-                self.log.info('{} File good'.format(site))
+                self.logger.info('{} File good'.format(site))
             except:
-                self.log.info('{} file corrupt, regenerationg'.format(site))
+                self.logger.info('{} file corrupt, regenerationg'.format(site))
                 # file is corrupt, generate from sql
                 generate_excel(site)
-                self.log.info('{} File generation success'.format(site))
+                self.logger.info('{} File generation success'.format(site))
             file_to_send.append(file_name)
 
         subject = '{}_Daily-List-Of-Competitor-Jobs.xlsx'.format(
