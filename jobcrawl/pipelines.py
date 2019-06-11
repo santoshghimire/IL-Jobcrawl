@@ -31,6 +31,12 @@ class JobscrawlerPipeline(object):
             charset='utf8'
         )
         self.cur = self.conn.cursor()
+        self.dropped_count = {
+            'alljobs': 0,
+            'drushim': 0,
+            'jobmaster': 0,
+            'jobnet': 0,
+        }
         # self.ids_seen = set()
 
     @classmethod
@@ -111,6 +117,11 @@ class JobscrawlerPipeline(object):
                 ))
                 self.conn.commit()
             except pymysql.err.IntegrityError:
+                if spider.name in self.dropped_count:
+                    self.dropped_count[spider.name] += 1
+                else:
+                    self.dropped_count[spider.name] = 1
+
                 raise DropItem(
                     "\n" + "+" * 50 + "\n" +
                     "Duplicate item found: %s" % item +
@@ -137,3 +148,5 @@ class JobscrawlerPipeline(object):
             self.conn.close()
         except:
             pass
+        self.logger.info("Total Dropped Item count for %s = %s",
+            spider.name, self.dropped_count[spider.name])
