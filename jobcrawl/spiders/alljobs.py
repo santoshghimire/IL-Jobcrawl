@@ -13,7 +13,7 @@ class AllJobsSpider(scrapy.Spider):
     name = "alljobs"
     allowed_domains = ["http://www.alljobs.co.il"]
     start_urls = [
-        "http://www.alljobs.co.il/SearchResultsGuest.aspx?" +
+        "https://www.alljobs.co.il/SearchResultsGuest.aspx?" +
         "page=1&position=&type=&freetxt=&city=&region=",
     ]
 
@@ -73,7 +73,9 @@ class AllJobsSpider(scrapy.Spider):
 
             try:
                 company = job_item_sel.xpath(
-                    './/div[@class="T14"]/text()').extract_first()
+                    './/div[@class="T14"]/a/text()').extract_first()
+                if company:
+                    company = company.strip()
             except:
                 company = ""
 
