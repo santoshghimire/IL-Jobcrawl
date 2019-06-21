@@ -288,7 +288,7 @@ JobNet : {jobnet_companies} companies
         for each_dir in [data_path, client_path, logs_path]:
             for each_file in os.listdir(each_dir):
                 new_file = each_file.replace('scrapy_log_output_', '')
-                file_date = new_file[:10]
+                file_date = new_file[:10].replace('-', '_')
                 if file_date not in date_range:
                     file_path = os.path.join(each_dir, each_file)
                     os.remove(file_path)
