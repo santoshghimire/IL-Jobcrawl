@@ -16,6 +16,7 @@ class ClientChanges:
         reload(sys)
         sys.setdefaultencoding('utf-8')
         self.today = datetime.date.today()
+        # self.today = datetime.date.today() - datetime.timedelta(days=1)
 
         """ For testing purpose will """
         # self.today_str = "05/10/2016"
@@ -30,7 +31,8 @@ class ClientChanges:
 
         # Generate range of dates for a week
         self.date_range = []
-        for i in range(8):
+        # for i in range(8):
+        for i in range(2):  # use only yesterday/today data
             item = (self.today - datetime.timedelta(days=i)).strftime(
                 "%d/%m/%Y")
             item = '"' + item + '"'
