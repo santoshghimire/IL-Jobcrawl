@@ -149,4 +149,4 @@ class JobscrawlerPipeline(object):
         except:
             pass
         spider.logger.info("Total Dropped Item count for %s = %s",
-            spider.name, self.dropped_count[spider.name])
+            spider.name, self.dropped_count.get(spider.name))

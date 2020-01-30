@@ -31,8 +31,7 @@ class JobmasterSpider(scrapy.Spider):
         """
         Get all the links for Location
         """
-        job_location_links_list = response.xpath(
-            "//a[contains(@href,'/jobs/?bigarea=')]/@href").extract()
+        job_location_links_list = response.xpath("//a[contains(@href,'/jobs/?l=')]/@href").extract()
 
         for location_li in job_location_links_list:
             self.total_locations += 1
@@ -74,6 +73,8 @@ class JobmasterSpider(scrapy.Spider):
                     company = job_item_sel.xpath(
                         ".//span[@class='font14 CompanyNameLink']/text()"
                     ).extract_first()
+                if company:
+                    company = company.strip()
             except:
                 company = ""
 
