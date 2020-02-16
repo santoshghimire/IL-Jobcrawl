@@ -8,7 +8,7 @@ import locale
 import urlparse
 from jobcrawl.items import JobItem
 from scrapy.http import HtmlResponse
-from alljobs_js_scraper import JSScraperRunner
+from jobcrawl.alljobs_js_scraper import JSScraperRunner
 
 
 class AllJobsSpider(scrapy.Spider):
@@ -16,7 +16,7 @@ class AllJobsSpider(scrapy.Spider):
 
     name = "alljobs"
     allowed_domains = ["http://www.alljobs.co.il"]
-    start_url = 'https://www.alljobs.co.il/SearchResultsGuest.aspx?page=1&position=&type=&freetxt=&city=&region='
+    start_urls = ['https://www.alljobs.co.il/SearchResultsGuest.aspx?page=1&position=&type=&freetxt=&city=&region=']
 
     def __init__(self):
         sys.stdout = codecs.getwriter(
@@ -146,8 +146,7 @@ class AllJobsSpider(scrapy.Spider):
                     'unique_id': 'alljobs_{}'.format(job_id)
                 }
 
-                # yield item
-                print(item)
+                yield item
 
             next_page = response.xpath('//div[@class="jobs-paging-next"]/a/@href').extract_first()
             if next_page:
