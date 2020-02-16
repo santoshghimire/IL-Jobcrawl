@@ -1,0 +1,46 @@
+{
+  "name": "crowd_funding",
+  "version": "1.0.0",
+  "description": "Crowd Funding",
+  "main": "jscrawler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://ec2-54-249-50-98.ap-northeast-1.compute.amazonaws.com:8000/gitlab/AstaMuse/crowd_funding.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.3",
+    "cheerio-tableparser": "^1.0.1",
+    "dotenv": "^6.1.0",
+    "fetch-json": "^2.1.1",
+    "html-entities": "^1.2.1",
+    "html-to-json": "^0.6.0",
+    "html2json": "^1.0.2",
+    "languagedetect": "^2.0.0",
+    "log4js": "^3.0.6",
+    "moment": "^2.22.2",
+    "node-fetch": "^2.3.0",
+    "pg": "^7.6.0",
+    "puppeteer": "^1.20.0",
+    "puppeteer-extra": "^3.1.9",
+    "puppeteer-extra-plugin-stealth": "^2.4.9",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.4",
+    "striptags": "^3.1.1",
+    "utf8": "^3.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.9.0",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-config-prettier": "^3.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-jsx-a11y": "^6.1.2",
+    "eslint-plugin-prettier": "^3.0.0",
+    "eslint-plugin-react": "^7.11.1",
+    "prettier": "^1.14.3"
+  }
+}

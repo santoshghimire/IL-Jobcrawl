@@ -35,6 +35,12 @@ class LeftCompany(scrapy.Spider):
     excel_path = '{}/{}_Daily-Competitor-Client-Change.xlsx'.format(
         excel_dir, today_str)
 
+    # @classmethod
+    # def from_crawler(cls, crawler, *args, **kwargs):
+    #     spider = super(LeftCompany, cls).from_crawler(crawler, *args, **kwargs)
+    #     crawler.signals.connect(spider.spider_closed, signals.spider_closed)
+    #     return spider
+
     def __init__(self):
 
         dispatcher.connect(self.spider_closed, signals.spider_closed)

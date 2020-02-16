@@ -105,3 +105,6 @@ logs
 details.txt
 text_*
 bad*
+tmp/
+js_puppeteer/node_modules/
+js_puppeteer/tmp/
