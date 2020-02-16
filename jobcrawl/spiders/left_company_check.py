@@ -2,14 +2,14 @@ import sys
 import codecs
 import scrapy
 import locale
-import time
 import os
-from xlrd import open_workbook
+# import time
+# from xlrd import open_workbook
 from openpyxl import load_workbook
-from openpyxl.styles import Font
+# from openpyxl.styles import Font
 
 from scrapy import signals
-import pandas as pd
+# import pandas as pd
 import datetime
 from scrapy.xlib.pydispatch import dispatcher
 
@@ -299,4 +299,11 @@ JobNet : {jobnet_companies} companies
                 if file_date not in date_range:
                     file_path = os.path.join(each_dir, each_file)
                     os.remove(file_path)
+
         self.c.clean_residual_database(month_range)
+
+        alljobs_htmls = 'alljobs_htmls'
+        for each_file in os.listdir(alljobs_htmls):
+            if each_file.endswith('.html'):
+                file_path = os.path.join(alljobs_htmls, each_file)
+                os.remove(each_file)

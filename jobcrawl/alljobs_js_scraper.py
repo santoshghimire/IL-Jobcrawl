@@ -41,7 +41,7 @@ class JSScraperRunner(object):
             # ensure the script will finish due to crash or signals
             p.poll()
             output = (p.stdout.read() or '').strip()
-            self.log.info("JS Crawler stdout: %s", output)
+            self.log.info("Output of %s => %s", args, output)
             if output == 'Saved':
                 success = True
 
@@ -55,7 +55,8 @@ class JSScraperRunner(object):
         t1 = time.time()
 
         if str(res) != '0':
-            self.log_error(res, self.script_name, args, t0, t1)
+            self.log.error("Failed call to %s(%s), result=%s, time={:.03f}s".format(t1 - t0),
+                           self.script_name, args, res)
             return False
         else:
             self.log.info('Success call to %s(%s), result=%s, time={:.03f}s'
