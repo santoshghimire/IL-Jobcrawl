@@ -306,4 +306,4 @@ JobNet : {jobnet_companies} companies
         for each_file in os.listdir(alljobs_htmls):
             if each_file.endswith('.html'):
                 file_path = os.path.join(alljobs_htmls, each_file)
-                os.remove(each_file)
+                os.remove(file_path)
