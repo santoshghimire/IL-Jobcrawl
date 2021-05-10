@@ -8,7 +8,7 @@ import locale
 import urlparse
 from jobcrawl.items import JobItem
 from scrapy.http import HtmlResponse
-from jobcrawl.alljobs_js_scraper import JSScraperRunner
+from jobcrawl.js_scraper import JSScraperRunner
 
 
 class AllJobsSpider(scrapy.Spider):

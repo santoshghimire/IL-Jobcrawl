@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import scrapy
 # from scrapy.shell import inspect_response
 from jobcrawl.items import JobItem
@@ -7,6 +8,9 @@ import datetime
 import sys
 import locale
 import codecs
+import urlparse
+from scrapy.http import HtmlResponse
+from jobcrawl.js_scraper import JSScraperRunner
 
 
 class JobmasterSpider(scrapy.Spider):
@@ -26,26 +30,62 @@ class JobmasterSpider(scrapy.Spider):
         self.total_locations_job = 0
         self.all_jobs_count = 0
         self.each_location_total_jobs = 0
+        self.html_dir_name = 'jobmaster_htmls'
+        if not os.path.exists(self.html_dir_name):
+            os.makedirs(self.html_dir_name)
+        self.runner = JSScraperRunner(self.logger)
 
     def parse(self, response):
         """
         Get all the links for Location
         """
-        job_location_links_list = response.xpath("//a[contains(@href,'/jobs/?l=')]/@href").extract()
+        job_location_links_list = response.xpath("//a[contains(@href,'/jobs/searchfilter.asp?type=')]/@href").extract()
 
         for location_li in job_location_links_list:
             self.total_locations += 1
             yield scrapy.Request(
                 response.urljoin(location_li),
-                callback=self.parse_each_location,
+                callback=self.parse_each_sub_location,
                 dont_filter=True
             )
 
-    def parse_each_location(self, response):
-
+    def parse_each_sub_location(self, response):
         if response.status != 200:
             self.logger.error("{}\n ERROR Code {}: {} \n {}".format(
                 "*" * 30, response.status, response.url, "*" * 30))
+
+        job_location_links_list = response.xpath("//a[contains(@href, '/jobs/?l=')]/@href").extract()
+        for c, location_li in enumerate(job_location_links_list):
+            if not c:
+                # First link is the link for entier region. Other are links for section of the region
+                self.total_locations += 1
+                yield scrapy.Request(
+                    response.urljoin(location_li),
+                    callback=self.parse_each_location,
+                    dont_filter=True
+                )
+
+    def parse_each_location(self, response):
+        if response.status != 200:
+            self.logger.error("{}\n ERROR Code {}: {} \n {}".format(
+                "*" * 30, response.status, response.url, "*" * 30))
+
+        url = response.url
+        parsed = urlparse.urlparse(url)
+        try:
+            page = urlparse.parse_qs(parsed.query)['currPage'][0]
+        except:
+            page = 1
+        fname = "page_{}.html".format(page)
+        output_file = os.path.join(self.html_dir_name, fname)
+
+        # Run JS Crawler
+        self.runner.run(url, output_file)
+
+        if os.path.isfile(output_file):
+            body = open(output_file).read()
+            response = HtmlResponse(url=url, body=body, encoding='utf-8')
+
         job_article_div_list = response.xpath(
             "//article[@class='CardStyle JobItem font14']")
         for job_article in job_article_div_list:
@@ -67,19 +107,18 @@ class JobmasterSpider(scrapy.Spider):
                 job_title = ''
 
             try:
-                company = job_item_sel.xpath(
+                company = job_item_sel.xpath(".//div")[1].xpath(
                     ".//a[@class='font14 CompanyNameLink']/text()").extract_first()
                 if not company:
                     company = job_item_sel.xpath(
-                        ".//span[@class='font14 CompanyNameLink']/text()"
-                    ).extract_first()
+                        ".//div")[1].xpath(".//span[@class='font14 ByTitle']/text()").extract_first()
                 if company:
                     company = company.strip()
             except:
                 company = ""
 
             try:
-                company_jobs = job_item_sel.xpath(
+                company_jobs = job_item_sel.xpath(".//div")[1].xpath(
                     ".//a[@class='font14 CompanyNameLink']/@href").extract_first()
                 if company_jobs:
                     company_jobs = response.urljoin(company_jobs)
@@ -93,11 +132,19 @@ class JobmasterSpider(scrapy.Spider):
                 country_areas = ""
 
             try:
-                category = job_item_sel.xpath(".//span[@class='Gray']").xpath(
-                    "normalize-space(string())").extract_first().strip()
-                category = category.replace("|", ",")
+                category = job_item_sel.xpath(".//li[@class='jobType']").xpath(
+                    "normalize-space(string())").extract_first()
+                if category:
+                    category = category.strip()
             except:
-                category = ''
+                category = ""
+
+            # try:
+            #     category = job_item_sel.xpath(".//span[@class='Gray']").xpath(
+            #         "normalize-space(string())").extract_first().strip()
+            #     category = category.replace("|", ",")
+            # except:
+            #     category = ''
 
             try:
                 all_child_elem_job_item = job_item_sel.xpath("./*")
@@ -178,13 +225,12 @@ class JobmasterSpider(scrapy.Spider):
                 'unique_id': 'jobmaster_{}'.format(job_id)
             }
             yield item
+
         pagi_link_sel_list = response.xpath("//a[@class='paging']")
 
         for pagi_link_sel in pagi_link_sel_list:
-
             nextpagi_text = pagi_link_sel.xpath(
                 "text()").extract_first()
-            if nextpagi_text == u'\u05d4\u05d1\u05d0 \xbb':
-                yield scrapy.Request(response.urljoin(
-                    pagi_link_sel.xpath("@href").extract_first()),
-                    self.parse_each_location, dont_filter=True)
+            if nextpagi_text == u'\u05d4\u05d1\u05d0\xbb' or nextpagi_text == u'\u05d4\u05d1\u05d0 \xbb':
+                next_url = response.urljoin(pagi_link_sel.xpath("@href").extract_first())
+                yield scrapy.Request(next_url, self.parse_each_location, dont_filter=True)

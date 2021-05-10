@@ -100,6 +100,7 @@ class JSScraperRunner(object):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     runner = JSScraperRunner(log=logging)
-    url = 'https://www.alljobs.co.il/SearchResultsGuest.aspx?page=1&position=&type=&freetxt=&city=&region='
-    fname = "test_file1.html"
+    # url = 'https://www.alljobs.co.il/SearchResultsGuest.aspx?page=1&position=&type=&freetxt=&city=&region='
+    url = 'https://www.jobmaster.co.il/jobs/?l=%D7%A9%D7%A8%D7%95%D7%9F'
+    fname = "test_file2.html"
     runner.run(url, fname)
