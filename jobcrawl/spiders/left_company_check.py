@@ -302,8 +302,11 @@ JobNet : {jobnet_companies} companies
 
         self.c.clean_residual_database(month_range)
 
-        alljobs_htmls = 'alljobs_htmls'
-        for each_file in os.listdir(alljobs_htmls):
-            if each_file.endswith('.html'):
-                file_path = os.path.join(alljobs_htmls, each_file)
-                os.remove(file_path)
+        for html_dir in ['alljobs_htmls', 'jobmaster_htmls']:
+            try:
+                for each_file in os.listdir(html_dir):
+                    if each_file.endswith('.html'):
+                        file_path = os.path.join(html_dir, each_file)
+                        os.remove(file_path)
+            except OSError:
+                pass

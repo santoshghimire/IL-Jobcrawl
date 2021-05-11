@@ -41,15 +41,16 @@ class JobmasterSpider(scrapy.Spider):
         """
         job_location_links_list = response.xpath("//a[contains(@href,'/jobs/searchfilter.asp?type=')]/@href").extract()
 
-        for location_li in job_location_links_list:
+        for c, location_li in enumerate(job_location_links_list):
             self.total_locations += 1
             yield scrapy.Request(
                 response.urljoin(location_li),
                 callback=self.parse_each_sub_location,
-                dont_filter=True
+                dont_filter=True,
+                cb_kwargs={"location_id": c}
             )
 
-    def parse_each_sub_location(self, response):
+    def parse_each_sub_location(self, response, location_id):
         if response.status != 200:
             self.logger.error("{}\n ERROR Code {}: {} \n {}".format(
                 "*" * 30, response.status, response.url, "*" * 30))
@@ -62,10 +63,11 @@ class JobmasterSpider(scrapy.Spider):
                 yield scrapy.Request(
                     response.urljoin(location_li),
                     callback=self.parse_each_location,
-                    dont_filter=True
+                    dont_filter=True,
+                    cb_kwargs={"location_id": location_id}
                 )
 
-    def parse_each_location(self, response):
+    def parse_each_location(self, response, location_id):
         if response.status != 200:
             self.logger.error("{}\n ERROR Code {}: {} \n {}".format(
                 "*" * 30, response.status, response.url, "*" * 30))
@@ -76,7 +78,7 @@ class JobmasterSpider(scrapy.Spider):
             page = urlparse.parse_qs(parsed.query)['currPage'][0]
         except:
             page = 1
-        fname = "page_{}.html".format(page)
+        fname = "location_{}_page_{}.html".format(location_id, page)
         output_file = os.path.join(self.html_dir_name, fname)
 
         # Run JS Crawler
