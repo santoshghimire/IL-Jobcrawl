@@ -47,10 +47,10 @@ class JobmasterSpider(scrapy.Spider):
                 response.urljoin(location_li),
                 callback=self.parse_each_sub_location,
                 dont_filter=True,
-                cb_kwargs={"location_id": c}
+                meta={"location_id": c}
             )
 
-    def parse_each_sub_location(self, response, location_id):
+    def parse_each_sub_location(self, response):
         if response.status != 200:
             self.logger.error("{}\n ERROR Code {}: {} \n {}".format(
                 "*" * 30, response.status, response.url, "*" * 30))
@@ -64,10 +64,10 @@ class JobmasterSpider(scrapy.Spider):
                     response.urljoin(location_li),
                     callback=self.parse_each_location,
                     dont_filter=True,
-                    cb_kwargs={"location_id": location_id}
+                    meta=response.meta
                 )
 
-    def parse_each_location(self, response, location_id):
+    def parse_each_location(self, response):
         if response.status != 200:
             self.logger.error("{}\n ERROR Code {}: {} \n {}".format(
                 "*" * 30, response.status, response.url, "*" * 30))
@@ -78,6 +78,7 @@ class JobmasterSpider(scrapy.Spider):
             page = urlparse.parse_qs(parsed.query)['currPage'][0]
         except:
             page = 1
+        location_id = response.meta['location_id']
         fname = "location_{}_page_{}.html".format(location_id, page)
         output_file = os.path.join(self.html_dir_name, fname)
 
