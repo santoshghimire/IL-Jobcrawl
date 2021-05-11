@@ -236,4 +236,5 @@ class JobmasterSpider(scrapy.Spider):
                 "text()").extract_first()
             if nextpagi_text == u'\u05d4\u05d1\u05d0\xbb' or nextpagi_text == u'\u05d4\u05d1\u05d0 \xbb':
                 next_url = response.urljoin(pagi_link_sel.xpath("@href").extract_first())
-                yield scrapy.Request(next_url, self.parse_each_location, dont_filter=True)
+                yield scrapy.Request(next_url, self.parse_each_location, dont_filter=True,
+                                     meta={'location_id': location_id})
