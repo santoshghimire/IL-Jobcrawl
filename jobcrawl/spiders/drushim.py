@@ -13,6 +13,7 @@ import datetime
 class DrushimSpider(scrapy.Spider):
     name = "drushim"
     allowed_domains = ["drushim.co.il"]
+    base_url = "https://www.drushim.co.il"
     start_urls = (
         'https://www.drushim.co.il/jobs/search/%22%22/?ssaen=1',
     )
@@ -32,6 +33,8 @@ class DrushimSpider(scrapy.Spider):
 
             job_link = job_container.xpath(
                 ".//div[@class='flex nowrap align-self-center pc-view open-job text-center']/a/@href").extract_first()
+            if job_link:
+                job_link = "{}{}".format(self.base_url, job_link)
 
             try:
                 job_id = "-".join(job_link.split("/")[-2:])
