@@ -57,15 +57,13 @@ class JobmasterSpider(scrapy.Spider):
 
         job_location_links_list = response.xpath("//a[contains(@href, '/jobs/?l=')]/@href").extract()
         for c, location_li in enumerate(job_location_links_list):
-            if not c:
-                # First link is the link for entier region. Other are links for section of the region
-                self.total_locations += 1
-                yield scrapy.Request(
-                    response.urljoin(location_li),
-                    callback=self.parse_each_location,
-                    dont_filter=True,
-                    meta=response.meta
-                )
+            self.total_locations += 1
+            yield scrapy.Request(
+                response.urljoin(location_li),
+                callback=self.parse_each_location,
+                dont_filter=True,
+                meta={"location_id": "{}_{}".format(response.meta['location_id'], c)}
+            )
 
     def parse_each_location(self, response):
         if response.status != 200:
