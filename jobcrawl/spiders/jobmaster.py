@@ -17,7 +17,7 @@ class JobmasterSpider(scrapy.Spider):
     name = "jobmaster"
     allowed_domains = ["jobmaster.co.il"]
     start_urls = (
-        'http://www.jobmaster.co.il/',
+        'https://www.jobmaster.co.il/',
     )
 
     def __init__(self):
@@ -94,7 +94,7 @@ class JobmasterSpider(scrapy.Spider):
             job_id_group = re.findall(r'[\d]+', job_article_id)
             if job_id_group:
                 job_id = job_id_group[0]
-                job_link = "http://www.jobmaster.co.il/code/check/" \
+                job_link = "https://www.jobmaster.co.il/code/check/" \
                            "checknum.asp?flagShare={}".format(job_id)
             else:
                 job_id = ""
