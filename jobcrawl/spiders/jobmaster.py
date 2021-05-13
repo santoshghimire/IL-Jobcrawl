@@ -15,7 +15,7 @@ from jobcrawl.js_scraper import JSScraperRunner
 
 class JobmasterSpider(scrapy.Spider):
     name = "jobmaster"
-    allowed_domains = ["http://www.jobmaster.co.il/"]
+    allowed_domains = ["jobmaster.co.il"]
     start_urls = (
         'http://www.jobmaster.co.il/',
     )
