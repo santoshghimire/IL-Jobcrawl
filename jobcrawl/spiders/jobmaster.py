@@ -39,7 +39,7 @@ class JobmasterSpider(scrapy.Spider):
         """
         Get all the links for Location
         """
-        job_location_links_list = response.xpath("//a[contains(@href,'/jobs/searchfilter.asp?type=')]/@href").extract()
+        job_location_links_list = response.xpath("//a[contains(@href,'/jobs/searchfilterHome.asp?type=')]/@href").extract()
 
         for c, location_li in enumerate(job_location_links_list):
             self.total_locations += 1
