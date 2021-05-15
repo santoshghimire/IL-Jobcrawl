@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 import scrapy
 # from scrapy.shell import inspect_response
+from scrapy import signals
 from jobcrawl.items import JobItem
+from scrapy.http import HtmlResponse
+from jobcrawl.selenium_scraper import DrushimScraper
+from scrapy.xlib.pydispatch import dispatcher
 
 import sys
 import locale
@@ -14,19 +18,25 @@ class DrushimSpider(scrapy.Spider):
     name = "drushim"
     allowed_domains = ["drushim.co.il"]
     base_url = "https://www.drushim.co.il"
-    start_urls = (
-        'https://www.drushim.co.il/jobs/search/%22%22/?ssaen=1',
-    )
+    scrape_url = 'https://www.drushim.co.il/jobs/search/%22%22/?ssaen=1'
+    start_urls = (scrape_url, )
+    seen_job_ids = set()
 
     def __init__(self):
-
         sys.stdout = codecs.getwriter(
             locale.getpreferredencoding())(sys.stdout)
         reload(sys)
         sys.setdefaultencoding('utf-8')
+        self.selenium_scraper = DrushimScraper(self.scrape_url, self.logger)
+        dispatcher.connect(self.spider_closed, signals.spider_closed)
 
     def parse(self, response):
+        for page_source in self.selenium_scraper.scrape():
+            response = HtmlResponse(url=self.scrape_url, body=page_source, encoding='utf-8')
+            for item in self.parse_html(response):
+                yield item
 
+    def parse_html(self, response):
         job_container_list = response.xpath(
             "//div[@class='job-item-main pb-3 job-hdr']")
         for job_container in job_container_list:
@@ -40,6 +50,11 @@ class DrushimSpider(scrapy.Spider):
                 job_id = "-".join(job_link.split("/")[-2:])
             except:
                 job_id = ""
+
+            if not job_id or job_id in self.seen_job_ids:
+                continue
+
+            self.seen_job_ids.add(job_id)
 
             try:
                 job_title = job_container.xpath(
@@ -131,3 +146,6 @@ class DrushimSpider(scrapy.Spider):
             }
 
             yield item
+
+    def spider_closed(self, spider):
+        self.selenium_scraper.close_driver()
