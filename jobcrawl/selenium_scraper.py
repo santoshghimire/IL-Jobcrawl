@@ -17,7 +17,7 @@ class DrushimScraper(object):
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_driver = '/usr/local/bin/chromedriver'
-        self.driver = webdriver.Chrome(options=chrome_options, executable_path=chrome_driver)
+        self.driver = webdriver.Chrome(chrome_options=chrome_options, executable_path=chrome_driver)
 
     def scrape(self):
         self.log.info("Scraping %s", self.url)
