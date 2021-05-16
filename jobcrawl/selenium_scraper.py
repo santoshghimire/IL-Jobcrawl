@@ -1,5 +1,6 @@
 import time
 from selenium import webdriver
+from pyvirtualdisplay import Display
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.chrome.options import Options
@@ -17,6 +18,8 @@ class DrushimScraper(object):
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_driver = '/usr/local/bin/chromedriver'
+        display = Display(visible=0, size=(800, 800))
+        display.start()
         self.driver = webdriver.Chrome(chrome_options=chrome_options, executable_path=chrome_driver)
 
     def scrape(self):
