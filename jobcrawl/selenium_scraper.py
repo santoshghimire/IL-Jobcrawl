@@ -8,6 +8,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 
 class DrushimScraper(object):
+    WAIT_TIME = 5
 
     def __init__(self, url, log):
         self.log = log
