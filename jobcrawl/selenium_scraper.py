@@ -14,16 +14,22 @@ logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 
 class DrushimScraper(object):
-    WAIT_TIME = 5
+    WAIT_TIME = 10
 
     def __init__(self, url, log):
         self.log = log
         self.url = url
         chrome_options = Options()
+        chrome_options.page_load_strategy = 'eager'
+        chrome_options.add_argument("start-maximized")
+        chrome_options.add_argument("enable-automation")
         chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--enable-javascript")
         chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-infobars")
         chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--disable-browser-side-navigation")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--enable-javascript")
         chrome_driver = '/usr/local/bin/chromedriver'
         display = Display(visible=0, size=(800, 800))
         display.start()
@@ -31,8 +37,8 @@ class DrushimScraper(object):
 
     def scrape(self):
         self.log.info("Scraping %s", self.url)
+        # self.driver.implicitly_wait(self.WAIT_TIME)
         self.driver.get(self.url)
-        self.driver.implicitly_wait(10)
         yield self.driver.page_source
         page_count = 1
         while True:
