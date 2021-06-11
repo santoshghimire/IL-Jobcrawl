@@ -12,7 +12,7 @@ class JobNetSpider(scrapy.Spider):
     name = "jobnet"
     allowed_domains = ["jobnet.co.il"]
     start_urls = (
-        'http://www.jobnet.co.il/positionresults.aspx?p=0',
+        'https://www.jobnet.co.il/jobs?p=0',
     )
 
     def __init__(self):
@@ -24,83 +24,64 @@ class JobNetSpider(scrapy.Spider):
 
     def parse(self, response):
 
-        job_container_list = response.xpath("//div[@typeof='JobPosting']")
+        job_table = response.xpath("//table[@id='ContentPlaceHolder1_ucSearhRes_rptResults']")
+        job_rows = job_table.xpath(".//tr")
 
-        for job_container in job_container_list:
-            job_title = job_container.xpath(
-                ".//div[@class='divTitle']/h2/a/text()"
-            ).extract_first()
+        for job_row in job_rows:
+            job_title = job_row.xpath(".//h2[@property='title']").xpath(
+                "normalize-space(string())").extract_first()
 
-            job_link = job_container.xpath(
-                ".//div[@class='divTitle']/h2/a/@href"
-            ).extract_first()
-
+            job_link = job_row.xpath(".//a[contains(@href, '/jobs?')]/@href").extract_first()
             try:
                 job_id = urlparse.parse_qs(job_link).get('positionid')[0]
             except:
                 job_id = ""
+
             job_link = "http://www.jobnet.co.il/" + job_link
 
-            job_post_date = job_container.xpath(
+            job_post_date = job_row.xpath(
                 ".//p[@property='datePosted']/text()"
             ).extract_first()
 
-            company_name = job_container.xpath(
-                ".//span[@class='PositionCompanyName']/text()"
-            ).extract_first()
+            company_elem = job_row.xpath(".//p[@property='hiringOrganization']")
+            company_name = company_elem.xpath(
+                "normalize-space(string())").extract_first()
 
-            try:
-                company_id_str = job_container.xpath(
-                    ".//span[@class='PositionCompanyName']/@onclick"
-                ).extract_first()
-                company_query_params = company_id_str.replace(
-                    'javascript:window.open(', ''
-                ).split(",")[0].replace("'", '')
-                company_id = urlparse.parse_qs(company_query_params).get(
-                    'companyid')[0]
-            except:
-                company_id = ""
+            company_jobs = company_elem.xpath(".//a/@href").extract_first()
+            company_jobs = "http://www.jobnet.co.il/" + company_jobs
 
-            company_jobs = (
-                "http://www.jobnet.co.il/positionresults"
-                ".aspx?companyid=" + company_id
-            )
-
-            job_heads = job_container.xpath(
-                ".//div[contains(@class, 'jobContainerInfo')]"
-                "/p[@class='headLines']/text()"
-            ).extract()
             job_description = []
             try:
-                job_headline_1 = job_heads[1]
-                if job_headline_1:
-                    job_description.append(job_headline_1.strip())
+                job_desc = job_row.xpath(".//div[@property='description']").xpath(
+                    "normalize-space(string())").extract_first()
+                if job_desc:
+                    job_description.append(job_desc.strip())
             except:
                 pass
-            job_desc = job_container.xpath(
-                ".//div[contains(@class, 'jobContainerInfo')]"
-                "/i[@property='description']"
-            ).xpath("normalize-space(string())").extract_first()
-            if job_desc:
-                job_description.append(job_desc.strip())
-            try:
-                job_headline_2 = job_heads[2]
-                if job_headline_2:
-                    job_description.append(job_headline_2.strip())
-            except:
-                pass
-            job_skills = job_container.xpath(
-                ".//div[contains(@class, 'jobContainerInfo')]"
-                "/i[@property='skills']"
-            ).xpath("normalize-space(string())").extract_first()
-            if job_skills:
-                job_description.append(job_skills.strip())
-            job_description = "\n".join(job_description)
-            country_areas = job_container.xpath(
-                ".//div[@class='jobContainerLocation']/i"
-            ).xpath("normalize-space(string())").extract_first()
 
-            category = ""
+            try:
+                job_skills = job_row.xpath(".//div[@property='skills']").xpath(
+                    "normalize-space(string())").extract_first()
+                if job_skills:
+                    job_description.append(job_skills.strip())
+            except:
+                pass
+
+            job_description = "\n".join(job_description)
+
+            try:
+                country_areas = job_row.xpath(
+                    ".//span[@property='jobLocation']"
+                ).xpath("normalize-space(string())").extract_first()
+            except:
+                country_areas = ""
+
+            try:
+                category = job_row.xpath(
+                    ".//span[@property='employmentType']"
+                ).xpath("normalize-space(string())").extract_first()
+            except:
+                category = ""
 
             item = JobItem()
             item['Job'] = {
@@ -120,15 +101,22 @@ class JobNetSpider(scrapy.Spider):
             yield item
 
         # handling pagination
-        next_pagi = response.xpath(
-            "//div[@class='searchInfo']/p/text()").extract_first()
-        total = int(next_pagi.split(' ')[-1])
-        per_page = float(next_pagi.split(' ')[0])
-        if total / per_page > total / int(per_page):
-            pages = total / int(per_page) + 1
-        else:
-            pages = total / int(per_page)
-        for i in range(1, pages):
-            next_url = "http://www.jobnet.co.il/positionresults.aspx?p=" +\
-                str(i)
+        current_pg_from_query = int(response.url.split('?p=')[-1])
+        selected_page = response.xpath("//a[@class='btnPaging Selected']")
+        selected_page_no = int(selected_page.xpath("normalize-space(string())").extract_first())
+        if current_pg_from_query != selected_page_no:
+            next_url = "http://www.jobnet.co.il/jobs?p=" + str(selected_page_no)
             yield scrapy.Request(next_url, callback=self.parse)
+        else:
+            available_pages = response.xpath("//a[@class='btnPaging ']")
+            available_page_no = [i.xpath("normalize-space(string())").extract_first() for i in available_pages]
+            all_available_page_nos = []
+            for av_page_no in available_page_no:
+                try:
+                    all_available_page_nos.append(int(av_page_no))
+                except:
+                    pass
+            next_page = selected_page_no + 1
+            if next_page in all_available_page_nos:
+                next_url = "http://www.jobnet.co.il/jobs?p=" + str(next_page)
+                yield scrapy.Request(next_url, callback=self.parse)
