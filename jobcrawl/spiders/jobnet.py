@@ -28,7 +28,7 @@ class JobNetSpider(scrapy.Spider):
         job_rows = job_table.xpath(".//tr")
 
         for job_row in job_rows:
-            job_title = job_row.xpath(".//h2[@property='title']").xpath(
+            job_title = job_row.xpath(".//h2[@itemprop='title']").xpath(
                 "normalize-space(string())").extract_first()
 
             job_link = job_row.xpath(".//a[contains(@href, '/jobs?')]/@href").extract_first()
@@ -37,10 +37,10 @@ class JobNetSpider(scrapy.Spider):
             except:
                 job_id = ""
 
-            job_link = "http://www.jobnet.co.il/" + job_link
+            job_link = "http://www.jobnet.co.il" + job_link
 
             job_post_date = job_row.xpath(
-                ".//p[@property='datePosted']/text()"
+                ".//p[@itemprop='datePosted']/text()"
             ).extract_first()
 
             company_elem = job_row.xpath(".//p[@property='hiringOrganization']")
@@ -48,11 +48,11 @@ class JobNetSpider(scrapy.Spider):
                 "normalize-space(string())").extract_first()
 
             company_jobs = company_elem.xpath(".//a/@href").extract_first()
-            company_jobs = "http://www.jobnet.co.il/" + company_jobs
+            company_jobs = "http://www.jobnet.co.il" + company_jobs
 
             job_description = []
             try:
-                job_desc = job_row.xpath(".//div[@property='description']").xpath(
+                job_desc = job_row.xpath(".//div[@itemprop='description']").xpath(
                     "normalize-space(string())").extract_first()
                 if job_desc:
                     job_description.append(job_desc.strip())
@@ -60,7 +60,7 @@ class JobNetSpider(scrapy.Spider):
                 pass
 
             try:
-                job_skills = job_row.xpath(".//div[@property='skills']").xpath(
+                job_skills = job_row.xpath(".//div[@itemprop='skills']").xpath(
                     "normalize-space(string())").extract_first()
                 if job_skills:
                     job_description.append(job_skills.strip())
@@ -71,7 +71,7 @@ class JobNetSpider(scrapy.Spider):
 
             try:
                 country_areas = job_row.xpath(
-                    ".//span[@property='jobLocation']"
+                    ".//span[@itemprop='jobLocation']"
                 ).xpath("normalize-space(string())").extract_first()
             except:
                 country_areas = ""
