@@ -48,7 +48,10 @@ class JobNetSpider(scrapy.Spider):
                 "normalize-space(string())").extract_first()
 
             company_jobs = company_elem.xpath(".//a/@href").extract_first()
-            company_jobs = "http://www.jobnet.co.il" + company_jobs
+            if company_jobs:
+                company_jobs = "http://www.jobnet.co.il{}".format(company_jobs)
+            else:
+                company_jobs = ''
 
             job_description = []
             try:
