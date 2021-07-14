@@ -1,0 +1,8 @@
+scrapy==1.5.1
+eventlet==0.21.0
+selenium==3.141.0
+pyvirtualdisplay==0.2.5
+openpyxl==2.5.4
+pymysql==0.9.2
+pandas==0.23.3
+pyasn1-modules

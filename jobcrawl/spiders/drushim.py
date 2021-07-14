@@ -5,7 +5,8 @@ from scrapy import signals
 from jobcrawl.items import JobItem
 from scrapy.http import HtmlResponse
 from jobcrawl.selenium_scraper import DrushimScraper
-from scrapy.xlib.pydispatch import dispatcher
+from pydispatch import dispatcher
+# from scrapy.xlib.pydispatch import dispatcher
 
 import sys
 import locale

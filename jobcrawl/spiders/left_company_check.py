@@ -11,7 +11,8 @@ from openpyxl import load_workbook
 from scrapy import signals
 # import pandas as pd
 import datetime
-from scrapy.xlib.pydispatch import dispatcher
+# from scrapy.xlib.pydispatch import dispatcher
+from pydispatch import dispatcher
 
 from jobcrawl.mailer import send_email  # , send_plain_email
 from jobcrawl.clientchanges import ClientChanges
