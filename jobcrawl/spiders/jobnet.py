@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-import sys
-import codecs
-import locale
+# import sys
+# import codecs
+# import locale
 import scrapy
 import urllib.parse as urlparse
 
@@ -17,10 +17,10 @@ class JobNetSpider(scrapy.Spider):
 
     def __init__(self):
 
-        sys.stdout = codecs.getwriter(
-            locale.getpreferredencoding())(sys.stdout)
-        reload(sys)
-        sys.setdefaultencoding('utf-8')
+        # sys.stdout = codecs.getwriter(
+        #     locale.getpreferredencoding())(sys.stdout)
+        # reload(sys)
+        # sys.setdefaultencoding('utf-8')
 
     def parse(self, response):
 

@@ -5,9 +5,9 @@ import scrapy
 from jobcrawl.items import JobItem
 import re
 import datetime
-import sys
-import locale
-import codecs
+# import sys
+# import locale
+# import codecs
 import urllib.parse as urlparse
 from scrapy.http import HtmlResponse
 from jobcrawl.js_scraper import JSScraperRunner
@@ -22,10 +22,10 @@ class JobmasterSpider(scrapy.Spider):
 
     def __init__(self):
 
-        sys.stdout = codecs.getwriter(locale.getpreferredencoding()
-                                      )(sys.stdout)
-        reload(sys)
-        sys.setdefaultencoding('utf-8')
+        # sys.stdout = codecs.getwriter(locale.getpreferredencoding()
+        #                               )(sys.stdout)
+        # reload(sys)
+        # sys.setdefaultencoding('utf-8')
         self.total_locations = 0
         self.total_locations_job = 0
         self.all_jobs_count = 0

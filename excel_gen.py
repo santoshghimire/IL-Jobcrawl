@@ -1,8 +1,8 @@
 import datetime
 import pymysql
-import sys
-import locale
-import codecs
+# import sys
+# import locale
+# import codecs
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl import Workbook
@@ -20,10 +20,10 @@ settings = {
 
 def generate_excel(site_name):
     """ Read sql query (database table)  and return pandas dataframe"""
-    sys.stdout = codecs.getwriter(
-        locale.getpreferredencoding())(sys.stdout)
-    reload(sys)
-    sys.setdefaultencoding('utf-8')
+    # sys.stdout = codecs.getwriter(
+    #     locale.getpreferredencoding())(sys.stdout)
+    # reload(sys)
+    # sys.setdefaultencoding('utf-8')
 
     today = datetime.date.today()
     today_str = today.strftime("%d/%m/%Y")

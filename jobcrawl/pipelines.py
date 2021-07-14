@@ -5,9 +5,9 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 import os
-import sys
-import locale
-import codecs
+# import sys
+# import locale
+# import codecs
 import pymysql
 from scrapy.exceptions import DropItem
 import datetime
@@ -59,10 +59,10 @@ class JobscrawlerPipeline(object):
             self.temp_each_site_excel_file_path = '{}/{}_{}.xlsx'.format(
                 directory, today_str, self.sheet_name
             )  # temporary xls file which contain scraped item
-            sys.stdout = codecs.getwriter(
-                locale.getpreferredencoding())(sys.stdout)
-            reload(sys)
-            sys.setdefaultencoding('utf-8')
+            # sys.stdout = codecs.getwriter(
+            #     locale.getpreferredencoding())(sys.stdout)
+            # reload(sys)
+            # sys.setdefaultencoding('utf-8')
 
             """ To create each site's excel file"""
             self.workbook = Workbook()

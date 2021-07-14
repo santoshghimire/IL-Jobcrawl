@@ -8,9 +8,9 @@ from jobcrawl.selenium_scraper import DrushimScraper
 from pydispatch import dispatcher
 # from scrapy.xlib.pydispatch import dispatcher
 
-import sys
-import locale
-import codecs
+# import sys
+# import locale
+# import codecs
 import re
 import datetime
 
@@ -24,10 +24,10 @@ class DrushimSpider(scrapy.Spider):
     seen_job_ids = set()
 
     def __init__(self):
-        sys.stdout = codecs.getwriter(
-            locale.getpreferredencoding())(sys.stdout)
-        reload(sys)
-        sys.setdefaultencoding('utf-8')
+        # sys.stdout = codecs.getwriter(
+        #     locale.getpreferredencoding())(sys.stdout)
+        # reload(sys)
+        # sys.setdefaultencoding('utf-8')
         self.selenium_scraper = DrushimScraper(self.scrape_url, self.logger)
         dispatcher.connect(self.spider_closed, signals.spider_closed)
 

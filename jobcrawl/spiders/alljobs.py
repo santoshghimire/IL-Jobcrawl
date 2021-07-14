@@ -1,10 +1,10 @@
 import re
 import os
-import sys
+# import sys
 import time
-import codecs
+# import codecs
 import scrapy
-import locale
+# import locale
 import urllib.parse as urlparse
 from jobcrawl.items import JobItem
 from scrapy.http import HtmlResponse
@@ -19,10 +19,10 @@ class AllJobsSpider(scrapy.Spider):
     start_urls = ['https://www.alljobs.co.il/SearchResultsGuest.aspx?page=1&position=&type=&freetxt=&city=&region=']
 
     def __init__(self):
-        sys.stdout = codecs.getwriter(
-            locale.getpreferredencoding())(sys.stdout)
-        reload(sys)
-        sys.setdefaultencoding('utf-8')
+        # sys.stdout = codecs.getwriter(
+        #     locale.getpreferredencoding())(sys.stdout)
+        # reload(sys)
+        # sys.setdefaultencoding('utf-8')
         self.html_dir_name = 'alljobs_htmls'
         if not os.path.exists(self.html_dir_name):
             os.makedirs(self.html_dir_name)

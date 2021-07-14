@@ -1,9 +1,9 @@
 import datetime
 import pymysql
 import os
-import sys
-import locale
-import codecs
+# import sys
+# import locale
+# import codecs
 import pandas as pd
 
 settings = {
@@ -17,10 +17,10 @@ settings = {
 class ClientChanges:
 
     def __init__(self):
-        sys.stdout = codecs.getwriter(
-            locale.getpreferredencoding())(sys.stdout)
-        reload(sys)
-        sys.setdefaultencoding('utf-8')
+        # sys.stdout = codecs.getwriter(
+        #     locale.getpreferredencoding())(sys.stdout)
+        # reload(sys)
+        # sys.setdefaultencoding('utf-8')
         self.today = datetime.date.today()
 
         """ For testing purpose will """

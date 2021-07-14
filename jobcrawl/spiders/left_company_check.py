@@ -1,7 +1,7 @@
-import sys
-import codecs
+# import sys
+# import codecs
 import scrapy
-import locale
+# import locale
 import os
 # import time
 # from xlrd import open_workbook
@@ -45,10 +45,10 @@ class LeftCompany(scrapy.Spider):
     def __init__(self):
 
         dispatcher.connect(self.spider_closed, signals.spider_closed)
-        sys.stdout = codecs.getwriter(
-            locale.getpreferredencoding())(sys.stdout)
-        reload(sys)
-        sys.setdefaultencoding('utf-8')
+        # sys.stdout = codecs.getwriter(
+        #     locale.getpreferredencoding())(sys.stdout)
+        # reload(sys)
+        # sys.setdefaultencoding('utf-8')
 
         # prepare clientchanges report
         self.c = ClientChanges()
