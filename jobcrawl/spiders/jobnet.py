@@ -16,7 +16,7 @@ class JobNetSpider(scrapy.Spider):
     )
 
     def __init__(self):
-
+        pass
         # sys.stdout = codecs.getwriter(
         #     locale.getpreferredencoding())(sys.stdout)
         # reload(sys)
