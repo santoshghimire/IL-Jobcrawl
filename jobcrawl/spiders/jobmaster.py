@@ -8,7 +8,7 @@ import datetime
 import sys
 import locale
 import codecs
-import urlparse
+import urllib.parse as urlparse
 from scrapy.http import HtmlResponse
 from jobcrawl.js_scraper import JSScraperRunner
 

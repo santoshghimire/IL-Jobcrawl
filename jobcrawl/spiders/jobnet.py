@@ -3,7 +3,7 @@ import sys
 import codecs
 import locale
 import scrapy
-import urlparse
+import urllib.parse as urlparse
 
 from jobcrawl.items import JobItem
 

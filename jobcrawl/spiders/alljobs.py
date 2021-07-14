@@ -5,7 +5,7 @@ import time
 import codecs
 import scrapy
 import locale
-import urlparse
+import urllib.parse as urlparse
 from jobcrawl.items import JobItem
 from scrapy.http import HtmlResponse
 from jobcrawl.js_scraper import JSScraperRunner
