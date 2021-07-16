@@ -37,7 +37,10 @@ class JobNetSpider(scrapy.Spider):
             except:
                 job_id = ""
 
-            job_link = "http://www.jobnet.co.il" + job_link
+            if job_link:
+                job_link = "http://www.jobnet.co.il{}".format(job_link)
+            else:
+                job_link = ""
 
             job_post_date = job_row.xpath(
                 ".//p[@itemprop='datePosted']/text()"
