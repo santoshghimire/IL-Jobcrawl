@@ -46,7 +46,7 @@ class JobNetSpider(scrapy.Spider):
                 ".//p[@itemprop='datePosted']/text()"
             ).extract_first()
 
-            company_elem = job_row.xpath(".//p[@property='hiringOrganization']")
+            company_elem = job_row.xpath(".//p[@itemprop='hiringOrganization']")
             company_name = company_elem.xpath(
                 "normalize-space(string())").extract_first()
 
@@ -84,7 +84,7 @@ class JobNetSpider(scrapy.Spider):
 
             try:
                 category = job_row.xpath(
-                    ".//span[@property='employmentType']"
+                    ".//span[@itemprop='employmentType']"
                 ).xpath("normalize-space(string())").extract_first()
             except:
                 category = ""
