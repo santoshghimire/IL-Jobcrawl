@@ -109,20 +109,27 @@ class JobNetSpider(scrapy.Spider):
         # handling pagination
         current_pg_from_query = int(response.url.split('?p=')[-1])
         selected_page = response.xpath("//a[@class='btnPaging Selected']")
-        selected_page_no = int(selected_page.xpath("normalize-space(string())").extract_first())
-        if current_pg_from_query != selected_page_no:
-            next_url = "http://www.jobnet.co.il/jobs?p=" + str(selected_page_no)
-            yield scrapy.Request(next_url, callback=self.parse)
-        else:
-            available_pages = response.xpath("//a[@class='btnPaging ']")
-            available_page_no = [i.xpath("normalize-space(string())").extract_first() for i in available_pages]
-            all_available_page_nos = []
-            for av_page_no in available_page_no:
-                try:
-                    all_available_page_nos.append(int(av_page_no))
-                except:
-                    pass
-            next_page = selected_page_no + 1
-            if next_page in all_available_page_nos:
-                next_url = "http://www.jobnet.co.il/jobs?p=" + str(next_page)
+        selected_pg_no = selected_page.xpath("normalize-space(string())").extract_first()
+        try:
+            selected_page_no = int(selected_pg_no)
+        except TypeError:
+            print("Drushim: Failed to get selected page no as int: {} (current_pg_from_query={})"
+                  "".format(selected_pg_no, current_pg_from_query))
+            selected_page_no = None
+        if selected_page_no is not None:
+            if current_pg_from_query != selected_page_no:
+                next_url = "http://www.jobnet.co.il/jobs?p=" + str(selected_page_no)
                 yield scrapy.Request(next_url, callback=self.parse)
+            else:
+                available_pages = response.xpath("//a[@class='btnPaging ']")
+                available_page_no = [i.xpath("normalize-space(string())").extract_first() for i in available_pages]
+                all_available_page_nos = []
+                for av_page_no in available_page_no:
+                    try:
+                        all_available_page_nos.append(int(av_page_no))
+                    except:
+                        pass
+                next_page = selected_page_no + 1
+                if next_page in all_available_page_nos:
+                    next_url = "http://www.jobnet.co.il/jobs?p=" + str(next_page)
+                    yield scrapy.Request(next_url, callback=self.parse)
