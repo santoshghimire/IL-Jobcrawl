@@ -50,6 +50,14 @@ class DrushimScraper(object):
 
     def click_load_jobs_button(self, page_count):
         self.log.info("Clicking load jobs button: Pages scraped = %s", page_count)
+        if page_count == 1:
+            try:
+                close_btn_cls = 'v-icon notranslate font-weight-bold mdi mdi-close theme--dark'
+                close_btn = WebDriverWait(self.driver, self.WAIT_TIME).until(expected_conditions.visibility_of_element_located((
+                    By.XPATH, "//i[@class='{}']".format(close_btn_cls))))
+                close_btn.click()
+            except:
+                self.log.exception("Failed to click close btn")
         try:
             load_more_jobs = WebDriverWait(self.driver, self.WAIT_TIME).until(
                 expected_conditions.visibility_of_element_located((
