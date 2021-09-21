@@ -84,21 +84,23 @@ class DrushimScraper(object):
             load_more_jobs.click()
         except WebDriverException as e:
             self.crash_count += 1
-            self.total_crash_count += 1            
+            self.total_crash_count += 1
             if "session deleted because of page crash" in str(e):
-                self.log.exception("CLicking load jobs button failed coz of page crash: crash_count={}, total_crash_count={}"
-                                   "".format(self.crash_count, self.total_crash_count))
+                self.log.exception("CLicking load jobs button failed coz of page crash: crash_count={}, total_crash_count={},"
+                                   " page={}".format(self.crash_count, self.total_crash_count, page_count))
                 raise e
-            self.log.exception("CLicking load jobs button failed: crash_count={}, total_crash_count={}".format(self.crash_count, self.total_crash_count))
+            self.log.exception("CLicking load jobs button failed: crash_count={}, total_crash_count={}, page={}"
+                               "".format(self.crash_count, self.total_crash_count, page_count))
             return
         except:
             self.crash_count += 1
             self.total_crash_count += 1
-            self.log.exception("CLicking load jobs button failed: crash_count={}, total_crash_count={}".format(self.crash_count, self.total_crash_count))
+            self.log.exception("CLicking load jobs button failed: crash_count={}, total_crash_count={}, page={}"
+                               "".format(self.crash_count, self.total_crash_count, page_count))
             return
 
         self.crash_count = 0
-        self.log.info("Load more jobs button clicked successfully")
+        self.log.info("Load more jobs button clicked successfully (page={})".format(page_count))
         return True
 
     def close_driver(self):
