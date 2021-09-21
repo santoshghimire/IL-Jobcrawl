@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.remote.remote_connection import LOGGER
+from selenium.common.exceptions import WebDriverException
 
 LOGGER.setLevel(logging.WARNING)
 logging.getLogger("requests").setLevel(logging.WARNING)
@@ -19,6 +20,14 @@ class DrushimScraper(object):
     def __init__(self, url, log):
         self.log = log
         self.url = url
+        self.total_crash_count = 0
+        self.crash_count = 0
+        display = Display(visible=0, size=(800, 800))
+        display.start()
+        self.init_driver()
+
+    def init_driver(self):
+        self.close_driver()
         chrome_options = Options()
         chrome_options.page_load_strategy = 'eager'
         chrome_options.add_argument("start-maximized")
@@ -31,19 +40,28 @@ class DrushimScraper(object):
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--enable-javascript")
         chrome_driver = '/usr/local/bin/chromedriver'
-        display = Display(visible=0, size=(800, 800))
-        display.start()
         self.driver = webdriver.Chrome(chrome_options=chrome_options, executable_path=chrome_driver)
 
-    def scrape(self):
+    def scrape(self, offset=None):
         self.log.info("Scraping %s", self.url)
         # self.driver.implicitly_wait(self.WAIT_TIME)
         self.driver.get(self.url)
-        yield self.driver.page_source
+        if offset is None:
+            yield self.driver.page_source
         page_count = 1
         while True:
-            if not self.click_load_jobs_button(page_count):
+            try:
+                if not self.click_load_jobs_button(page_count):
+                    break
+            except WebDriverException:
+                self.init_driver()
+                time.sleep(1)
+                self.scrape(offset=page_count)
                 break
+            if offset is not None and page_count < offset:
+                page_count += 1
+                time.sleep(1)
+                continue
             time.sleep(10)
             yield self.driver.page_source
             page_count += 1
@@ -64,9 +82,22 @@ class DrushimScraper(object):
                     By.XPATH,
                     "//button[@class='v-btn v-btn--contained theme--light v-size--default load_jobs_btn ']")))
             load_more_jobs.click()
-        except:
-            self.log.exception("CLicking load jobs button failed")
+        except WebDriverException as e:
+            self.crash_count += 1
+            self.total_crash_count += 1            
+            if "session deleted because of page crash" in str(e):
+                self.log.exception("CLicking load jobs button failed coz of page crash: crash_count={}, total_crash_count={}"
+                                   "".format(self.crash_count, self.total_crash_count))
+                raise e
+            self.log.exception("CLicking load jobs button failed: crash_count={}, total_crash_count={}".format(self.crash_count, self.total_crash_count))
             return
+        except:
+            self.crash_count += 1
+            self.total_crash_count += 1
+            self.log.exception("CLicking load jobs button failed: crash_count={}, total_crash_count={}".format(self.crash_count, self.total_crash_count))
+            return
+
+        self.crash_count = 0
         self.log.info("Load more jobs button clicked successfully")
         return True
 

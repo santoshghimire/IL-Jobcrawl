@@ -35,10 +35,14 @@ class AllJobsSpider(scrapy.Spider):
         fname = "page_{}.html".format(page)
         output_file = os.path.join(self.html_dir_name, fname)
 
-        # Run JS Crawler
-        self.runner.run(url, output_file)
+        for attempt in range(5):
+            # Run JS Crawler
+            self.runner.run(url, output_file)
 
-        if os.path.isfile(output_file):
+            if not os.path.isfile(output_file):
+                self.logger.error("Output file not present. url=%s, attempt=%s, remaining=%s", url, attempt, 4 - attempt)
+                continue
+
             body = open(output_file).read()
             response = HtmlResponse(url=url, body=body, encoding='utf-8')
 
@@ -84,6 +88,12 @@ class AllJobsSpider(scrapy.Spider):
                         './/div[@class="T14"]/a/text()').extract_first()
                     if company:
                         company = company.strip()
+                    else:
+                        # Confidential company
+                        company = job_item_sel.xpath(
+                            './/div[@class="T14"]').xpath('/normalize-space(string())').extract_first()
+                        if company:
+                            company = company.strip()
                 except:
                     company = ""
 
@@ -153,5 +163,4 @@ class AllJobsSpider(scrapy.Spider):
                 time.sleep(1)
                 yield scrapy.Request(
                     response.urljoin(next_page), self.parse, dont_filter=True)
-        else:
-            self.logger.error("Output file not present. url=%s", url)
+            break
