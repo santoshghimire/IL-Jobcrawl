@@ -30,12 +30,19 @@ class DrushimSpider(scrapy.Spider):
         # sys.setdefaultencoding('utf-8')
         self.selenium_scraper = DrushimScraper(self.scrape_url, self.logger)
         dispatcher.connect(self.spider_closed, signals.spider_closed)
+        self.total_jobs = 0
 
     def parse(self, response):
+        page = 1
         for page_source in self.selenium_scraper.scrape():
             response = HtmlResponse(url=self.scrape_url, body=page_source, encoding='utf-8')
+            page_job_count = 0
             for item in self.parse_html(response):
+                self.total_jobs += 1
+                page_job_count += 1
                 yield item
+            self.logger.info("Drushim: Page %s job count = %s, total_jobs=%s", page, page_job_count, self.total_jobs)
+            page += 1
 
     def parse_html(self, response):
         job_container_list = response.xpath(

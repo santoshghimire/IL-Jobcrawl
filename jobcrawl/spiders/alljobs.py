@@ -27,6 +27,7 @@ class AllJobsSpider(scrapy.Spider):
         if not os.path.exists(self.html_dir_name):
             os.makedirs(self.html_dir_name)
         self.runner = JSScraperRunner(self.logger)
+        self.total_jobs = 0
 
     def parse(self, response):
         url = response.url
@@ -48,7 +49,7 @@ class AllJobsSpider(scrapy.Spider):
 
             # Parse the HTML response
             job_container_div_list = response.xpath("//div[@class='open-board']") or []
-
+            page_job_count = 0
             for job_item_sel in job_container_div_list:
                 job_id_container = job_item_sel.xpath(".//@id").extract_first()
                 job_id_group = re.findall(r'[\d]+', job_id_container)
@@ -155,9 +156,11 @@ class AllJobsSpider(scrapy.Spider):
                     'AllJobs_Job_class': job_class,
                     'unique_id': 'alljobs_{}'.format(job_id)
                 }
-
+                page_job_count += 1
+                self.total_jobs += 1
                 yield item
 
+            self.logger.info("Alljobs: Page %s job count = %s, total_jobs=%s", page, page_job_count, self.total_jobs)
             next_page = response.xpath('//div[@class="jobs-paging-next"]/a/@href').extract_first()
             if next_page:
                 time.sleep(1)

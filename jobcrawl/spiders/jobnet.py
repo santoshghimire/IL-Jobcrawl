@@ -16,17 +16,17 @@ class JobNetSpider(scrapy.Spider):
     )
 
     def __init__(self):
-        pass
         # sys.stdout = codecs.getwriter(
         #     locale.getpreferredencoding())(sys.stdout)
         # reload(sys)
         # sys.setdefaultencoding('utf-8')
+        self.total_jobs = 0
 
     def parse(self, response):
 
         job_table = response.xpath("//table[@id='ContentPlaceHolder1_ucSearhRes_rptResults']")
         job_rows = job_table.xpath(".//tr")
-
+        page_job_count = 0
         for job_row in job_rows:
             job_title = job_row.xpath(".//h2[@itemprop='title']").xpath(
                 "normalize-space(string())").extract_first()
@@ -104,6 +104,8 @@ class JobNetSpider(scrapy.Spider):
                 'AllJobs_Job_class': '',
                 'unique_id': 'jobnet_{}'.format(job_id)
             }
+            page_job_count += 1
+            self.total_jobs += 1
             yield item
 
         # handling pagination
@@ -116,6 +118,7 @@ class JobNetSpider(scrapy.Spider):
             print("Drushim: Failed to get selected page no as int: {} (current_pg_from_query={})"
                   "".format(selected_pg_no, current_pg_from_query))
             selected_page_no = None
+        self.logger.info("Jobnet: Page %s job count = %s, total_jobs=%s", current_pg_from_query, page_job_count, self.total_jobs)
         if selected_page_no is not None:
             if current_pg_from_query != selected_page_no:
                 next_url = "http://www.jobnet.co.il/jobs?p=" + str(selected_page_no)
