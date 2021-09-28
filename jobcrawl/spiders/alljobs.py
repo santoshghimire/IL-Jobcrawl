@@ -49,6 +49,9 @@ class AllJobsSpider(scrapy.Spider):
 
             # Parse the HTML response
             job_container_div_list = response.xpath("//div[@class='open-board']") or []
+            if not job_container_div_list:
+                # organic board
+                job_container_div_list = response.xpath("//div[@class='organic-board']") or []
             page_job_count = 0
             for job_item_sel in job_container_div_list:
                 job_id_container = job_item_sel.xpath(".//@id").extract_first()
@@ -81,6 +84,12 @@ class AllJobsSpider(scrapy.Spider):
                     job_title = job_item_sel.xpath(
                         './/div[contains(@class, "job-content-top-title")]'
                         '//div/a/h2/text()').extract_first()
+                    if not job_title:
+                        job_title = job_item_sel.xpath(
+                            './/div[contains(@class, "job-content-top-title")]'
+                            '//div/a/h3/text()').extract_first()
+                    if job_title:
+                        job_title = job_title.strip()
                 except:
                     job_title = ""
 
