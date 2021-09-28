@@ -48,10 +48,10 @@ class AllJobsSpider(scrapy.Spider):
             response = HtmlResponse(url=url, body=body, encoding='utf-8')
 
             # Parse the HTML response
-            job_container_div_list = response.xpath("//div[@class='open-board']") or []
-            if not job_container_div_list:
-                # organic board
-                job_container_div_list = response.xpath("//div[@class='organic-board']") or []
+            job_container_div_list_open = response.xpath("//div[@class='open-board']") or []
+            job_container_div_list_organic = response.xpath("//div[@class='organic-board']") or []
+            job_container_div_list = job_container_div_list_open + job_container_div_list_organic
+
             page_job_count = 0
             for job_item_sel in job_container_div_list:
                 job_id_container = job_item_sel.xpath(".//@id").extract_first()
