@@ -1,4 +1,4 @@
-scrapy==1.5.1
+scrapy==1.8.2
 eventlet==0.21.0
 selenium==3.141.0
 pyvirtualdisplay==0.2.5
