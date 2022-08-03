@@ -150,3 +150,15 @@ class JobscrawlerPipeline(object):
             pass
         spider.logger.info("Total Dropped Item count for %s = %s",
             spider.name, self.dropped_count.get(spider.name))
+        if spider.name == 'alljobs':
+            self.delete_files('alljobs_htmls')
+        elif spider.name == 'jobmaster':
+            self.delete_files('jobmaster_htmls')
+
+    def delete_files(self, html_dir):
+        try:
+            for each_file in os.listdir(html_dir):
+                file_path = os.path.join(html_dir, each_file)
+                os.remove(file_path)
+        except OSError:
+            pass

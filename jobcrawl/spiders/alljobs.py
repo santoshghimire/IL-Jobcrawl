@@ -15,7 +15,7 @@ class AllJobsSpider(scrapy.Spider):
     """ Spider to scrape job information from site http://www.alljobs.co.il """
 
     name = "alljobs"
-    allowed_domains = ["http://www.alljobs.co.il"]
+    allowed_domains = ["alljobs.co.il"]
     start_urls = ['https://www.alljobs.co.il/SearchResultsGuest.aspx?page=1&position=&type=&freetxt=&city=&region=']
 
     def __init__(self):
@@ -44,8 +44,14 @@ class AllJobsSpider(scrapy.Spider):
                 self.logger.error("Output file not present. url=%s, attempt=%s, remaining=%s", url, attempt, 4 - attempt)
                 continue
 
-            body = open(output_file).read()
+            fobj = open(output_file)
+            body = fobj.read()
             response = HtmlResponse(url=url, body=body, encoding='utf-8')
+            fobj.close()
+            try:
+                os.remove(output_file)
+            except OSError:
+                pass
 
             # Parse the HTML response
             job_container_div_list_open = response.xpath("//div[@class='open-board']") or []

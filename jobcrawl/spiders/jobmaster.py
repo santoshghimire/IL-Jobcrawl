@@ -89,8 +89,15 @@ class JobmasterSpider(scrapy.Spider):
                 self.logger.error("Jobmaster: Output file not present. url=%s, attempt=%s, remaining=%s", url, attempt, 4 - attempt)
                 continue
 
-            body = open(output_file).read()
+            fobj = open(output_file)
+            body = fobj.read()
             response = HtmlResponse(url=url, body=body, encoding='utf-8')
+            fobj.close()
+            try:
+                os.remove(output_file)
+            except OSError:
+                pass
+
 
             job_article_div_list = response.xpath(
                 "//article[@class='CardStyle JobItem font14']")

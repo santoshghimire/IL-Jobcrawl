@@ -306,8 +306,7 @@ JobNet : {jobnet_companies} companies
         for html_dir in ['alljobs_htmls', 'jobmaster_htmls']:
             try:
                 for each_file in os.listdir(html_dir):
-                    if each_file.endswith('.html'):
-                        file_path = os.path.join(html_dir, each_file)
-                        os.remove(file_path)
+                    file_path = os.path.join(html_dir, each_file)
+                    os.remove(file_path)
             except OSError:
                 pass
