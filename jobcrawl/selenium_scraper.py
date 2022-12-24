@@ -7,11 +7,15 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.remote.remote_connection import LOGGER
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import WebDriverException, TimeoutException
+
 
 LOGGER.setLevel(logging.WARNING)
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
+
+MAX_ALLOWED_LOAD_MORE_JOBS_TIMEOUTEXCEPTION_TRIES = 5
+MAX_RELOAD_FROM_BEGINNING_ALLOWED = 10
 
 
 class DrushimScraper(object):
@@ -22,6 +26,8 @@ class DrushimScraper(object):
         self.url = url
         self.total_crash_count = 0
         self.crash_count = 0
+        self.load_more_jobs_timeout_exception_count = 0
+        self.reload_scrape_from_beginning_count = 0
         display = Display(visible=0, size=(800, 800))
         display.start()
         self.init_driver()
@@ -53,7 +59,11 @@ class DrushimScraper(object):
             try:
                 if not self.click_load_jobs_button(page_count):
                     break
-            except WebDriverException:
+            except (WebDriverException, TimeoutException):
+                self.reload_scrape_from_beginning_count += 1
+                if self.reload_scrape_from_beginning_count >= MAX_RELOAD_FROM_BEGINNING_ALLOWED:
+                    self.log.error("Giving up after reloading from beginning for %s times. page_count=%s", MAX_RELOAD_FROM_BEGINNING_ALLOWED, page_count)
+                    break
                 self.init_driver()
                 time.sleep(1)
                 self.scrape(offset=page_count)
@@ -82,6 +92,7 @@ class DrushimScraper(object):
                     By.XPATH,
                     "//button[@class='v-btn v-btn--contained theme--light v-size--default load_jobs_btn ']")))
             load_more_jobs.click()
+            self.load_more_jobs_timeout_exception_count = 0
         except WebDriverException as e:
             self.crash_count += 1
             self.total_crash_count += 1
@@ -89,13 +100,26 @@ class DrushimScraper(object):
                 self.log.exception("CLicking load jobs button failed coz of page crash: crash_count={}, total_crash_count={},"
                                    " page={}".format(self.crash_count, self.total_crash_count, page_count))
                 raise e
-            self.log.exception("CLicking load jobs button failed: crash_count={}, total_crash_count={}, page={}"
+            self.log.exception("Giving up: clicking load jobs button failed due to unknown error: crash_count={}, total_crash_count={}, page={}"
                                "".format(self.crash_count, self.total_crash_count, page_count))
             return
+        except TimeoutException as e:
+            self.crash_count += 1
+            self.total_crash_count += 1
+            self.load_more_jobs_timeout_exception_count += 1
+            self.log.error("Attempt={}: Got TimeoutException while loading more jobs. Remaining attempts={}. crash_count={}, total_crash_count={}, page={}:"
+                           "".format(self.load_more_jobs_timeout_exception_count,
+                            MAX_ALLOWED_LOAD_MORE_JOBS_TIMEOUTEXCEPTION_TRIES - self.load_more_jobs_timeout_exception_count,
+                            self.crash_count, self.total_crash_count, page_count))
+            if self.load_more_jobs_timeout_exception_count >= MAX_ALLOWED_LOAD_MORE_JOBS_TIMEOUTEXCEPTION_TRIES:
+                # Max attempts reached. Reload from beginning
+                raise e
+            # Re-try till allowed (5 times) to click load jobs button
+            return self.click_load_jobs_button(page_count)
         except:
             self.crash_count += 1
             self.total_crash_count += 1
-            self.log.exception("CLicking load jobs button failed: crash_count={}, total_crash_count={}, page={}"
+            self.log.exception("Giving up: clicking load jobs button failed because of unknown error: crash_count={}, total_crash_count={}, page={}"
                                "".format(self.crash_count, self.total_crash_count, page_count))
             return
 
