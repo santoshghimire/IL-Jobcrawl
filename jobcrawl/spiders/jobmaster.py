@@ -100,15 +100,15 @@ class JobmasterSpider(scrapy.Spider):
 
 
             job_article_div_list = response.xpath(
-                "//article[@class='CardStyle JobItem font14']")
+                "//article[@class='CardStyle JobItem font14 ']")
+            # job_article_div_list = response.xpath("//article[contains(@class,'CardStyle JobItem font14')]")
             page_job_count = 0
             for job_article in job_article_div_list:
                 job_article_id = job_article.xpath(".//@id").extract_first()
                 job_id_group = re.findall(r'[\d]+', job_article_id)
                 if job_id_group:
                     job_id = job_id_group[0]
-                    job_link = "https://www.jobmaster.co.il/code/check/" \
-                               "checknum.asp?flagShare={}".format(job_id)
+                    job_link = "https://www.jobmaster.co.il/jobs/checknum.asp?key={}".format(job_id)
                 else:
                     job_id = ""
                     job_link = ""
