@@ -121,33 +121,28 @@ class JobmasterSpider(scrapy.Spider):
                     job_title = ''
 
                 try:
-                    company = job_item_sel.xpath(".//div")[1].xpath(
-                        ".//a[@class='font14 CompanyNameLink']/text()").extract_first()
+                    company = job_item_sel.xpath(".//a[@class='font14 CompanyNameLink']").xpath("normalize-space(string())").extract_first()
                     if not company:
-                        company = job_item_sel.xpath(
-                            ".//div")[1].xpath(".//span[@class='font14 ByTitle']/text()").extract_first()
+                        company = job_item_sel.xpath(".//span[@class='font14 ByTitle']/text()").extract_first()
                     if company:
                         company = company.strip()
                 except:
                     company = ""
 
                 try:
-                    company_jobs = job_item_sel.xpath(".//div")[1].xpath(
-                        ".//a[@class='font14 CompanyNameLink']/@href").extract_first()
+                    company_jobs = job_item_sel.xpath(".//a[@class='font14 CompanyNameLink']/@href").extract_first()
                     if company_jobs:
                         company_jobs = response.urljoin(company_jobs)
                 except:
                     company_jobs = ""
 
                 try:
-                    country_areas = job_item_sel.xpath(
-                        ".//li[@class='jobLocation']/text()").extract_first()
+                    country_areas = job_item_sel.xpath(".//li[@class='jobLocation']/text()").extract_first()
                 except:
                     country_areas = ""
 
                 try:
-                    category = job_item_sel.xpath(".//li[@class='jobType']").xpath(
-                        "normalize-space(string())").extract_first()
+                    category = job_item_sel.xpath(".//li[@class='jobType']").xpath("normalize-space(string())").extract_first()
                     if category:
                         category = category.strip()
                 except:
