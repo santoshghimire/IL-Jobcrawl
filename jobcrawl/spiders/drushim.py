@@ -53,6 +53,8 @@ class DrushimSpider(scrapy.Spider):
                 ".//div[@class='flex nowrap align-self-center pc-view open-job text-center']/a/@href").extract_first()
             if job_link:
                 job_link = "{}{}".format(self.base_url, job_link)
+                if job_link.endswith('/'):
+                    job_link = job_link[:-1]
 
             try:
                 job_id = "-".join(job_link.split("/")[-2:])
@@ -73,14 +75,14 @@ class DrushimSpider(scrapy.Spider):
 
             try:
                 company = job_container.xpath(
-                    ".//div[@class='layout job-details-top mt-md-2 align-baseline']"
+                    ".//div[@class='layout job-details-top mt-md-2']"
                     "/div[@class='flex grow-none ml-3']/p").xpath("normalize-space(string())").extract_first()
             except:
                 company = ""
 
             try:
                 company_jobs = job_container.xpath(
-                    ".//div[@class='layout job-details-top mt-md-2 align-baseline']"
+                    ".//div[@class='layout job-details-top mt-md-2']"
                     "/div[@class='flex grow-none ml-3']/p/a/@href").extract_first()
             except:
                 company_jobs = job_link
