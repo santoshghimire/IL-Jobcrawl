@@ -87,7 +87,11 @@ class DrushimSpider(scrapy.Spider):
             except:
                 company_jobs = job_link
 
-            job_description = ""
+            try:
+                job_description = job_container.xpath(".//div[@class='layout job-intro vacancyMain mt-2 px-md-4 px-2 py-1 wrap pointer']").xpath(
+                    "normalize-space(string())").extract_first()
+            except:
+                job_description = ""
 
             job_sub_details = job_container.xpath(".//div[@class='layout job-details-sub']").xpath(
                 "normalize-space(string())").extract_first()
@@ -105,16 +109,16 @@ class DrushimSpider(scrapy.Spider):
 
                 if job_post_date_num:
 
-                    second = 'שְׁנִיָה'.decode('utf-8')
-                    seconds = 'שניות'.decode('utf-8')
-                    minute = 'דַקָה'.decode('utf-8')
-                    minutes = 'דקות'.decode('utf-8')
-                    hour = 'שָׁעָה'.decode('utf-8')
-                    hours = 'שעות'.decode('utf-8')
-                    day = 'יְוֹם'.decode('utf-8')
-                    days = 'ימים'.decode('utf-8')
-                    # month = 'חוֹדֶשׁ'.decode('utf-8')
-                    # months = 'חודשים'.decode('utf-8')
+                    second = 'שְׁנִיָה'
+                    seconds = 'שניות'
+                    minute = 'דַקָה'
+                    minutes = 'דקות'
+                    hour = 'שָׁעָה'
+                    hours = 'שעות'
+                    day = 'יְוֹם'
+                    days = 'ימים'
+                    # month = 'חוֹדֶשׁ'
+                    # months = 'חודשים'
                     hms = [second, seconds, minute, minutes, hour, hours]
 
                     if day in job_post_date:
