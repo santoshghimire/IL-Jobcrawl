@@ -48,9 +48,9 @@ class DrushimSpider(scrapy.Spider):
         job_container_list = response.xpath(
             "//div[@class='job-item-main pb-3 job-hdr']")
         for job_container in job_container_list:
-
             job_link = job_container.xpath(
-                ".//div[@class='flex nowrap align-self-center pc-view open-job text-center']/a/@href").extract_first()
+                        './/div[contains(@class, "nowrap align-self-center pc-view open-job text-center")]'
+                        '/a/@href').extract_first()
             if job_link:
                 job_link = "{}{}".format(self.base_url, job_link)
                 if job_link.endswith('/'):

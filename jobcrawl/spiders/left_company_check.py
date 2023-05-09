@@ -272,6 +272,14 @@ JobNet : {jobnet_companies} companies
         self.logger.info('Residual data cleaned')
         self.logger.info('All done')
 
+    @staticmethod
+    def delete_file(file_path):
+        try:
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+        except:
+            pass
+
     def clean_residual_data(self):
         base_path = os.path.join(os.path.dirname(
             os.path.realpath(__file__)), os.pardir)
@@ -299,7 +307,7 @@ JobNet : {jobnet_companies} companies
                 file_date = new_file[:10].replace('-', '_')
                 if file_date not in date_range:
                     file_path = os.path.join(each_dir, each_file)
-                    os.remove(file_path)
+                    self.delete_file(file_path)
 
         self.c.clean_residual_database(month_range)
 
@@ -307,6 +315,6 @@ JobNet : {jobnet_companies} companies
             try:
                 for each_file in os.listdir(html_dir):
                     file_path = os.path.join(html_dir, each_file)
-                    os.remove(file_path)
+                    self.delete_file(file_path)
             except OSError:
                 pass
