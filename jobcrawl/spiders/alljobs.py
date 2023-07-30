@@ -5,7 +5,7 @@ import time
 # import codecs
 import scrapy
 # import locale
-from datetime import datetime
+import datetime
 import urllib.parse as urlparse
 from jobcrawl.items import JobItem
 from scrapy.http import HtmlResponse
@@ -42,7 +42,7 @@ class AllJobsSpider(scrapy.Spider):
         return False
 
     def reached_endtime(self):
-        now = datetime.utcnow()
+        now = datetime.datetime.utcnow()
         endtime = now.replace(hour=12, minute=30, second=0, microsecond=0)
         return now > endtime
 
@@ -58,6 +58,44 @@ class AllJobsSpider(scrapy.Spider):
             return False
         next_page_no = str(int(page) + 1)
         return url.replace('page={}'.format(page), 'page={}'.format(next_page_no))
+
+    @staticmethod
+    def find_date(job_post_date):
+        today_date = datetime.date.today()
+        today_date_str = today_date.strftime("%d/%m/%Y")
+        try:
+            job_post_date_num = re.findall(r'[\d]+', job_post_date)[0]
+            job_post_date_num = int(job_post_date_num)
+            if job_post_date_num:
+                second = 'שְׁנִיָה'
+                seconds = 'שניות'
+                minute = 'דַקָה'
+                minutes = 'דקות'
+                hour = 'שָׁעָה'
+                hours = 'שעות'
+                day = 'יְוֹם'
+                days = 'ימים'
+                # month = 'חוֹדֶשׁ'
+                # months = 'חודשים'
+                hms = [second, seconds, minute, minutes, hour, hours]
+                if day in job_post_date:
+                    job_post_date = datetime.date.today() - datetime.timedelta(days=job_post_date_num)
+                    job_post_date = job_post_date.strftime("%d/%m/%Y")
+                elif days in job_post_date:
+                    job_post_date = datetime.date.today() - datetime.timedelta(days=job_post_date_num)
+                    job_post_date = job_post_date.strftime("%d/%m/%Y")
+                elif [x for x in hms if x in job_post_date]:
+                    job_post_date = today_date_str
+                elif job_post_date_num == 0:
+                    job_post_date = today_date_str
+                else:
+                    job_post_date = job_post_date
+        except:
+            if job_post_date == 'לפני דקה':
+                job_post_date = today_date_str
+            else:
+                job_post_date = ""
+        return job_post_date
 
     def parse(self, response):
         url = response.url
@@ -107,10 +145,10 @@ class AllJobsSpider(scrapy.Spider):
                     job_date = job_item_sel.xpath(
                         './/div[@class="job-content-top-date"]/text()'
                     ).extract_first()
-                    # TODO: Change minutes ago to date format
-                    date = job_date.split(' ')[-1]
+                    job_date = self.find_date(job_date)
+                    job_date = job_date.split(' ')[-1]
                 except:
-                    date = ""
+                    job_date = ""
 
                 try:
                     job_class = job_item_sel.xpath(
@@ -197,7 +235,7 @@ class AllJobsSpider(scrapy.Spider):
                     'Job_id': job_id,
                     'Job_title': job_title,
                     'Job_Description': job_description,
-                    'Job_Post_Date': date,
+                    'Job_Post_Date': job_date,
                     'Job_URL': job_link,
                     'Country_Areas': country_areas,
                     'Job_categories': '',

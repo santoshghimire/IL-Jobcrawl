@@ -102,46 +102,7 @@ class DrushimSpider(scrapy.Spider):
             country_areas = jsd_val[0].strip() if jsd_val else ""
             category = jsd_val[2].strip() if jsd_val and len(jsd_val) == 4 else ""
             job_post_date = jsd_val[-1].strip() if jsd_val and len(jsd_val) == 4 else ""
-
-            try:
-                job_post_date_num = re.findall(r'[\d]+', job_post_date)[0]
-                job_post_date_num = int(job_post_date_num)
-
-                if job_post_date_num:
-
-                    second = 'שְׁנִיָה'
-                    seconds = 'שניות'
-                    minute = 'דַקָה'
-                    minutes = 'דקות'
-                    hour = 'שָׁעָה'
-                    hours = 'שעות'
-                    day = 'יְוֹם'
-                    days = 'ימים'
-                    # month = 'חוֹדֶשׁ'
-                    # months = 'חודשים'
-                    hms = [second, seconds, minute, minutes, hour, hours]
-
-                    if day in job_post_date:
-                        job_post_date = datetime.date.today() - \
-                            datetime.timedelta(days=job_post_date_num)
-                        job_post_date = job_post_date.strftime("%d/%m/%Y")
-                    elif days in job_post_date:
-                        job_post_date = datetime.date.today() - \
-                            datetime.timedelta(days=job_post_date_num)
-                        job_post_date = job_post_date.strftime("%d/%m/%Y")
-
-                    elif [x for x in hms if x in job_post_date]:
-                        job_post_date = datetime.date.today()
-                        job_post_date = job_post_date.strftime("%d/%m/%Y")
-
-                    elif job_post_date_num == 0:
-                        job_post_date = datetime.date.today()
-                        job_post_date = job_post_date.strftime("%d/%m/%Y")
-
-                    else:
-                        job_post_date = job_post_date
-            except:
-                job_post_date = ""
+            job_post_date = self.find_date(job_post_date)
 
             item = JobItem()
             item['Job'] = {
@@ -163,3 +124,42 @@ class DrushimSpider(scrapy.Spider):
 
     def spider_closed(self, spider):
         self.selenium_scraper.close_driver()
+
+    @staticmethod
+    def find_date(job_post_date):
+        today_date = datetime.date.today()
+        today_date_str = today_date.strftime("%d/%m/%Y")
+        try:
+            job_post_date_num = re.findall(r'[\d]+', job_post_date)[0]
+            job_post_date_num = int(job_post_date_num)
+            if job_post_date_num:
+                second = 'שְׁנִיָה'
+                seconds = 'שניות'
+                minute = 'דַקָה'
+                minutes = 'דקות'
+                hour = 'שָׁעָה'
+                hours = 'שעות'
+                day = 'יְוֹם'
+                days = 'ימים'
+                # month = 'חוֹדֶשׁ'
+                # months = 'חודשים'
+                hms = [second, seconds, minute, minutes, hour, hours]
+                if day in job_post_date:
+                    job_post_date = datetime.date.today() - datetime.timedelta(days=job_post_date_num)
+                    job_post_date = job_post_date.strftime("%d/%m/%Y")
+                elif days in job_post_date:
+                    job_post_date = datetime.date.today() - datetime.timedelta(days=job_post_date_num)
+                    job_post_date = job_post_date.strftime("%d/%m/%Y")
+                elif [x for x in hms if x in job_post_date]:
+                    job_post_date = today_date_str
+                elif job_post_date_num == 0:
+                    job_post_date = today_date_str
+                else:
+                    job_post_date = job_post_date
+        except:
+            if job_post_date == 'לפני דקה':
+                job_post_date = today_date_str
+            else:
+                job_post_date = ""
+        return job_post_date
+

@@ -42,7 +42,7 @@ class JSScraperRunner(object):
             p.poll()
             output = (p.stdout.read() or '').strip()
             self.log.info("Output of %s => %s", args, output)
-            if output == 'Saved':
+            if output == 'Saved' or output == b'Saved':
                 success = True
 
             error = p.stderr.read()
