@@ -93,16 +93,6 @@ class DrushimScraper(object):
                     "//button[@class='v-btn v-btn--contained theme--light v-size--default load_jobs_btn ']")))
             load_more_jobs.click()
             self.load_more_jobs_timeout_exception_count = 0
-        except WebDriverException as e:
-            self.crash_count += 1
-            self.total_crash_count += 1
-            if "session deleted because of page crash" in str(e):
-                self.log.exception("CLicking load jobs button failed coz of page crash: crash_count={}, total_crash_count={},"
-                                   " page={}".format(self.crash_count, self.total_crash_count, page_count))
-                raise e
-            self.log.exception("Giving up: clicking load jobs button failed due to unknown error: crash_count={}, total_crash_count={}, page={}"
-                               "".format(self.crash_count, self.total_crash_count, page_count))
-            return
         except TimeoutException as e:
             self.crash_count += 1
             self.total_crash_count += 1
@@ -116,6 +106,16 @@ class DrushimScraper(object):
                 raise e
             # Re-try till allowed (5 times) to click load jobs button
             return self.click_load_jobs_button(page_count)
+        except WebDriverException as e:
+            self.crash_count += 1
+            self.total_crash_count += 1
+            if "session deleted because of page crash" in str(e):
+                self.log.exception("CLicking load jobs button failed coz of page crash: crash_count={}, total_crash_count={},"
+                                   " page={}".format(self.crash_count, self.total_crash_count, page_count))
+                raise e
+            self.log.exception("Giving up: clicking load jobs button failed due to unknown error: crash_count={}, total_crash_count={}, page={}"
+                               "".format(self.crash_count, self.total_crash_count, page_count))
+            return
         except:
             self.crash_count += 1
             self.total_crash_count += 1
