@@ -32,8 +32,9 @@ const run = (async () => {
     const browser = await puppeteer.launch(options);
     const page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 926 });
+    await page.setDefaultNavigationTimeout(50000);  // timeout of 50 seconds
     await page.goto(url);
-    await page.waitFor(10000)
+    await page.waitFor(10000);  // Wait for 10 seconds to allow page to load properly
 
     let data = await page.content();
 

@@ -5,6 +5,7 @@ import time
 # import codecs
 import scrapy
 # import locale
+from datetime import datetime
 import urllib.parse as urlparse
 from jobcrawl.items import JobItem
 from scrapy.http import HtmlResponse
@@ -28,6 +29,35 @@ class AllJobsSpider(scrapy.Spider):
             os.makedirs(self.html_dir_name)
         self.runner = JSScraperRunner(self.logger)
         self.total_jobs = 0
+        self.max_page = 1500
+
+    def should_end_run(self, page, endpage_scraped=False):
+        text = 'scraped' if endpage_scraped else 'not scraped'
+        if self.reached_endtime():
+            self.logger.error("Alljobs: Reached Endtime. Ending run. End page (%s) = %s, total_jobs=%s", text, page, self.total_jobs)
+            return True
+        elif self.reached_maxpage(page):
+            self.logger.error("Alljobs: Reached max page. Ending run. End page (%s) = %s, total_jobs=%s", text, page, self.total_jobs)
+            return True
+        return False
+
+    def reached_endtime(self):
+        now = datetime.utcnow()
+        endtime = now.replace(hour=12, minute=30, second=0, microsecond=0)
+        return now > endtime
+
+    def reached_maxpage(self, page):
+        if page.isdigit():
+            return int(page) >= self.max_page
+        return False
+
+    def get_sequential_nextpage(self, current_url):
+        parsed = urlparse.urlparse(current_url)
+        page = urlparse.parse_qs(parsed.query)['page'][0]
+        if not page.isdigit():
+            return False
+        next_page_no = str(int(page) + 1)
+        return url.replace('page={}'.format(page), 'page={}'.format(next_page_no))
 
     def parse(self, response):
         url = response.url
@@ -36,12 +66,15 @@ class AllJobsSpider(scrapy.Spider):
         fname = "page_{}.html".format(page)
         output_file = os.path.join(self.html_dir_name, fname)
 
+        proper_nextpage_found = False
         for attempt in range(5):
             # Run JS Crawler
             self.runner.run(url, output_file)
 
             if not os.path.isfile(output_file):
                 self.logger.error("Output file not present. url=%s, attempt=%s, remaining=%s", url, attempt, 4 - attempt)
+                if self.should_end_run(page, endpage_scraped=False):
+                    break
                 continue
 
             fobj = open(output_file)
@@ -74,6 +107,7 @@ class AllJobsSpider(scrapy.Spider):
                     job_date = job_item_sel.xpath(
                         './/div[@class="job-content-top-date"]/text()'
                     ).extract_first()
+                    # TODO: Change minutes ago to date format
                     date = job_date.split(' ')[-1]
                 except:
                     date = ""
@@ -151,7 +185,6 @@ class AllJobsSpider(scrapy.Spider):
                         if description_text:
                             job_description += description_text
                             job_description += "\n"
-
                 except:
                     job_description = ""
 
@@ -178,7 +211,20 @@ class AllJobsSpider(scrapy.Spider):
             self.logger.info("Alljobs: Page %s job count = %s, total_jobs=%s", page, page_job_count, self.total_jobs)
             next_page = response.xpath('//div[@class="jobs-paging-next"]/a/@href').extract_first()
             if next_page:
+                if self.should_end_run(page, endpage_scraped=True):
+                    break
                 time.sleep(1)
+                proper_nextpage_found = True
                 yield scrapy.Request(
                     response.urljoin(next_page), self.parse, dont_filter=True)
+            else:
+                proper_nextpage_found = True  # Needed to prevent sequential nextpage run from triggering.
+                self.logger.info("Alljobs: Next page not found. Ending run. End page = %s. page job count = %s, total_jobs=%s", page, page_job_count, self.total_jobs)
             break
+
+
+        if not proper_nextpage_found and not self.should_end_run(page):
+            next_page_url = self.get_sequential_nextpage(current_url)
+            if next_page_url:
+                self.log.info("Alljobs: Parsing sequential nextpage: %s", next_page_url)
+                yield scrapy.Request(next_page_url, self.parse, dont_filter=True)
