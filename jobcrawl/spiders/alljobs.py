@@ -57,7 +57,7 @@ class AllJobsSpider(scrapy.Spider):
         if not page.isdigit():
             return False
         next_page_no = str(int(page) + 1)
-        return url.replace('page={}'.format(page), 'page={}'.format(next_page_no))
+        return current_url.replace('page={}'.format(page), 'page={}'.format(next_page_no))
 
     @staticmethod
     def find_date(job_post_date):
