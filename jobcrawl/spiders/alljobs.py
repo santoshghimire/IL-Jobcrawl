@@ -262,7 +262,7 @@ class AllJobsSpider(scrapy.Spider):
 
 
         if not proper_nextpage_found and not self.should_end_run(page):
-            next_page_url = self.get_sequential_nextpage(current_url)
+            next_page_url = self.get_sequential_nextpage(url)
             if next_page_url:
                 self.log.info("Alljobs: Parsing sequential nextpage: %s", next_page_url)
                 yield scrapy.Request(next_page_url, self.parse, dont_filter=True)
