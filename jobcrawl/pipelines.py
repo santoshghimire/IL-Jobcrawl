@@ -83,6 +83,7 @@ class JobscrawlerPipeline(object):
             crawl_date_str = crawl_date.strftime("%d/%m/%Y")
             # insert item
             try:
+                self.conn.ping()
                 self.cur.execute("""
                     INSERT INTO sites_datas(
                     Site,
