@@ -64,6 +64,7 @@ class DrushimScraper(object):
                 if self.reload_scrape_from_beginning_count >= MAX_RELOAD_FROM_BEGINNING_ALLOWED:
                     self.log.error("Giving up after reloading from beginning for %s times. page_count=%s", MAX_RELOAD_FROM_BEGINNING_ALLOWED, page_count)
                     break
+                self.log.info("Encountered webdriver crash, resuming scraping from page_count=%s", page_count)
                 self.init_driver()
                 time.sleep(1)
                 self.scrape(offset=page_count)

@@ -115,7 +115,7 @@ class JobNetSpider(scrapy.Spider):
         try:
             selected_page_no = int(selected_pg_no)
         except TypeError:
-            print("Drushim: Failed to get selected page no as int: {} (current_pg_from_query={})"
+            print("Jobnet: Failed to get selected page no as int: {} (current_pg_from_query={})"
                   "".format(selected_pg_no, current_pg_from_query))
             selected_page_no = None
         self.logger.info("Jobnet: Page %s job count = %s, total_jobs=%s", current_pg_from_query, page_job_count, self.total_jobs)
