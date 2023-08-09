@@ -117,6 +117,12 @@ class AllJobsSpider(scrapy.Spider):
 
             fobj = open(output_file)
             body = fobj.read()
+            if not body:
+                self.logger.error("Output file empty. url=%s, attempt=%s, remaining=%s", url, attempt, 4 - attempt)
+                if self.should_end_run(page, endpage_scraped=False):
+                    break
+                continue
+
             response = HtmlResponse(url=url, body=body, encoding='utf-8')
             fobj.close()
             try:
@@ -246,6 +252,12 @@ class AllJobsSpider(scrapy.Spider):
                 self.total_jobs += 1
                 yield item
 
+            if not page_job_count:
+                self.logger.error("Alljobs: 0 jobs scraped on current page=%s. url=%s, total_jobs=%s, attempt=%s, remaining=%s", page, url, self.total_jobs, attempt, 4 - attempt)
+                if self.should_end_run(page, endpage_scraped=False):
+                    break
+                continue
+
             self.logger.info("Alljobs: Page %s job count = %s, total_jobs=%s", page, page_job_count, self.total_jobs)
             next_page = response.xpath('//div[@class="jobs-paging-next"]/a/@href').extract_first()
             if next_page:
@@ -255,6 +267,8 @@ class AllJobsSpider(scrapy.Spider):
                 proper_nextpage_found = True
                 yield scrapy.Request(
                     response.urljoin(next_page), self.parse, dont_filter=True)
+            elif page < 1000:
+                self.logger.info("Alljobs: Next page not found but continuing anyway. Current page = %s. page job count = %s, total_jobs=%s", page, page_job_count, self.total_jobs)
             else:
                 proper_nextpage_found = True  # Needed to prevent sequential nextpage run from triggering.
                 self.logger.info("Alljobs: Next page not found. Ending run. End page = %s. page job count = %s, total_jobs=%s", page, page_job_count, self.total_jobs)

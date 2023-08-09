@@ -33,7 +33,11 @@ const run = (async () => {
     const page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 926 });
     // await page.setDefaultNavigationTimeout(50000);  // timeout of 50 seconds
-    await page.goto(url);
+    let status = await page.goto(url, {timeout: 50000});
+    status = status.status();
+    if (status != 200) {
+        console.log('Status code for url ', url, ' is ', status);
+    };
     await page.waitFor(10000);  // Wait for 10 seconds to allow page to load properly
 
     let data = await page.content();
