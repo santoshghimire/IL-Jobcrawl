@@ -7,6 +7,7 @@ from scrapy.http import HtmlResponse
 from jobcrawl.selenium_scraper import DrushimScraper
 from pydispatch import dispatcher
 # from scrapy.xlib.pydispatch import dispatcher
+from endtime_check import reached_endtime
 
 # import sys
 # import locale
@@ -35,6 +36,8 @@ class DrushimSpider(scrapy.Spider):
     def parse(self, response):
         page = 1
         for page_source in self.selenium_scraper.scrape():
+            if reached_endtime():
+                break
             response = HtmlResponse(url=self.scrape_url, body=page_source, encoding='utf-8')
             page_job_count = 0
             for item in self.parse_html(response):

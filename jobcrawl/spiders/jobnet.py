@@ -6,6 +6,7 @@ import scrapy
 import urllib.parse as urlparse
 
 from jobcrawl.items import JobItem
+from endtime_check import reached_endtime
 
 
 class JobNetSpider(scrapy.Spider):
@@ -108,6 +109,8 @@ class JobNetSpider(scrapy.Spider):
             self.total_jobs += 1
             yield item
 
+        if reached_endtime():
+            break
         # handling pagination
         current_pg_from_query = int(response.url.split('?p=')[-1])
         selected_page = response.xpath("//a[@class='btnPaging Selected']")

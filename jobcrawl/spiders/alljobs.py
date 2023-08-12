@@ -10,6 +10,7 @@ import urllib.parse as urlparse
 from jobcrawl.items import JobItem
 from scrapy.http import HtmlResponse
 from jobcrawl.js_scraper import JSScraperRunner
+from endtime_check import reached_endtime
 
 
 class AllJobsSpider(scrapy.Spider):
@@ -33,18 +34,13 @@ class AllJobsSpider(scrapy.Spider):
 
     def should_end_run(self, page, endpage_scraped=False):
         text = 'scraped' if endpage_scraped else 'not scraped'
-        if self.reached_endtime():
+        if reached_endtime():
             self.logger.error("Alljobs: Reached Endtime. Ending run. End page (%s) = %s, total_jobs=%s", text, page, self.total_jobs)
             return True
         elif self.reached_maxpage(page):
             self.logger.error("Alljobs: Reached max page. Ending run. End page (%s) = %s, total_jobs=%s", text, page, self.total_jobs)
             return True
         return False
-
-    def reached_endtime(self):
-        now = datetime.datetime.utcnow()
-        endtime = now.replace(hour=12, minute=30, second=0, microsecond=0)
-        return now > endtime
 
     def reached_maxpage(self, page):
         if page.isdigit():

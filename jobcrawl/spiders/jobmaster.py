@@ -11,6 +11,7 @@ import datetime
 import urllib.parse as urlparse
 from scrapy.http import HtmlResponse
 from jobcrawl.js_scraper import JSScraperRunner
+from endtime_check import reached_endtime
 
 
 class JobmasterSpider(scrapy.Spider):
@@ -41,6 +42,8 @@ class JobmasterSpider(scrapy.Spider):
         job_location_links_list = response.xpath("//a[contains(@href,'/jobs/searchfilterHome.asp?type=ezor&l=')]/@href").extract()
 
         for c, location_li in enumerate(job_location_links_list):
+            if reached_endtime():
+                break
             yield scrapy.Request(
                 response.urljoin(location_li),
                 callback=self.parse_each_sub_location,
@@ -56,6 +59,8 @@ class JobmasterSpider(scrapy.Spider):
 
         job_location_links_list = response.xpath("//a[contains(@href, '/jobs/?l=')]/@href").extract()
         for c, location_li in enumerate(job_location_links_list):
+            if reached_endtime():
+                break
             self.total_locations += 1
             location_id = "{}_{}".format(response.meta['location_id'], c)
             self.location_total_jobs[location_id] = 0
@@ -83,6 +88,8 @@ class JobmasterSpider(scrapy.Spider):
 
         for attempt in range(5):
             # Run JS Crawler
+            if reached_endtime():
+                break
             self.runner.run(url, output_file)
 
             if not os.path.isfile(output_file):
