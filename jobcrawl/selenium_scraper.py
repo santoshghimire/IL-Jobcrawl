@@ -67,7 +67,8 @@ class DrushimScraper(object):
                 self.log.info("Encountered webdriver crash, resuming scraping from page_count=%s", page_count)
                 self.init_driver()
                 time.sleep(1)
-                self.scrape(offset=page_count)
+                for pg in self.scrape(offset=page_count):
+                    yield pg
                 break
             if offset is not None and page_count < offset:
                 page_count += 1
