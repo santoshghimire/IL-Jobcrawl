@@ -126,7 +126,7 @@ class JobmasterSpider(scrapy.Spider):
                 job_item_sel = job_article.xpath(".//div[@class='JobItemRight Transition']")
                 try:
                     job_title = job_item_sel.xpath(
-                        ".//div[@class='CardHeader']/text()").extract_first()
+                        ".//a[@class='CardHeader']/text()").extract_first()
                 except:
                     job_title = ''
 
@@ -181,51 +181,12 @@ class JobmasterSpider(scrapy.Spider):
                     job_description = ""
 
                 try:
-                    job_post_date = all_child_elem_job_item[1].xpath(
-                        "text()").extract_first()
-                    try:
-                        job_post_date_num = re.findall(r'[\d]+', job_post_date)[0]
-                        job_post_date_num = int(job_post_date_num)
-
-                        if job_post_date_num:
-
-                            second = 'שְׁנִיָה'.decode('utf-8')
-                            seconds = 'שניות'.decode('utf-8')
-                            minute = 'דַקָה'.decode('utf-8')
-                            minutes = 'דקות'.decode('utf-8')
-                            hour = 'שָׁעָה'.decode('utf-8')
-                            hours = 'שעות'.decode('utf-8')
-                            day = 'יְוֹם'.decode('utf-8')
-                            days = 'ימים'.decode('utf-8')
-                            # month = 'חוֹדֶשׁ'.decode('utf-8')
-                            # months = 'חודשים'.decode('utf-8')
-                            hms = [second, seconds, minute, minutes, hour, hours]
-
-                            if day in job_post_date:
-                                job_post_date = datetime.date.today() - \
-                                    datetime.timedelta(days=job_post_date_num)
-                                job_post_date = job_post_date.strftime("%d/%m/%Y")
-                            elif days in job_post_date:
-                                job_post_date = datetime.date.today() - \
-                                    datetime.timedelta(days=job_post_date_num)
-                                job_post_date = job_post_date.strftime("%d/%m/%Y")
-
-                            elif [x for x in hms if x in job_post_date]:
-                                job_post_date = datetime.date.today()
-                                job_post_date = job_post_date.strftime("%d/%m/%Y")
-
-                            elif job_post_date_num == 0:
-                                job_post_date = datetime.date.today()
-                                job_post_date = job_post_date.strftime("%d/%m/%Y")
-
-                            else:
-                                job_post_date = job_post_date
-                    except:
-                        job_post_date = all_child_elem_job_item[1].xpath(
-                            "text()").extract_first()
+                    job_post_date = job_item_sel.xpath("./div[@class='paddingTop10px']/span[@class='Gray']/text()").extract_first()
+                    job_post_date = self.find_date(job_post_date)
 
                 except:
-                    job_post_date = ""
+                    today_date = datetime.date.today()
+                    today_date_str = today_date.strftime("%d/%m/%Y")
 
                 item = JobItem()
 
@@ -260,3 +221,42 @@ class JobmasterSpider(scrapy.Spider):
                     yield scrapy.Request(next_url, self.parse_each_location, dont_filter=True,
                                          meta={'location_id': location_id})
             break
+
+    @staticmethod
+    def find_date(job_post_date):
+        today_date = datetime.date.today()
+        today_date_str = today_date.strftime("%d/%m/%Y")
+        try:
+            job_post_date_num = re.findall(r'[\d]+', job_post_date)[0]
+            job_post_date_num = int(job_post_date_num)
+            if job_post_date_num:
+                second = 'שְׁנִיָה'
+                seconds = 'שניות'
+                minute = 'דַקָה'
+                minutes = 'דקות'
+                hour = 'שָׁעָה'
+                hours = 'שעות'
+                day = 'יְוֹם'
+                days = 'ימים'
+                # month = 'חוֹדֶשׁ'
+                # months = 'חודשים'
+                hms = [second, seconds, minute, minutes, hour, hours]
+                if day in job_post_date:
+                    job_post_date = datetime.date.today() - datetime.timedelta(days=job_post_date_num)
+                    job_post_date = job_post_date.strftime("%d/%m/%Y")
+                elif days in job_post_date:
+                    job_post_date = datetime.date.today() - datetime.timedelta(days=job_post_date_num)
+                    job_post_date = job_post_date.strftime("%d/%m/%Y")
+                elif [x for x in hms if x in job_post_date]:
+                    job_post_date = today_date_str
+                elif job_post_date_num == 0:
+                    job_post_date = today_date_str
+                else:
+                    job_post_date = job_post_date
+        except:
+            if job_post_date == 'לפני דקה':
+                job_post_date = today_date_str
+            else:
+                job_post_date = today_date_str
+        return job_post_date
+
