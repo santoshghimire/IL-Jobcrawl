@@ -7,7 +7,7 @@ from scrapy.http import HtmlResponse
 from jobcrawl.selenium_scraper import DrushimScraper
 from pydispatch import dispatcher
 # from scrapy.xlib.pydispatch import dispatcher
-from endtime_check import reached_endtime
+from jobcrawl.endtime_check import reached_endtime
 
 # import sys
 # import locale
