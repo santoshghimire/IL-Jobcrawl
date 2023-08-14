@@ -37,6 +37,7 @@ class DrushimSpider(scrapy.Spider):
         page = 1
         for page_source in self.selenium_scraper.scrape():
             if reached_endtime():
+                self.logger.info("Drushim: End run because endtime is reached")
                 break
             response = HtmlResponse(url=self.scrape_url, body=page_source, encoding='utf-8')
             page_job_count = 0

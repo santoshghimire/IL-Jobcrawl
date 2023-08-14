@@ -43,6 +43,7 @@ class JobmasterSpider(scrapy.Spider):
 
         for c, location_li in enumerate(job_location_links_list):
             if reached_endtime():
+                self.logger.info("JobMaster: End run because endtime is reached")
                 break
             yield scrapy.Request(
                 response.urljoin(location_li),
@@ -60,6 +61,7 @@ class JobmasterSpider(scrapy.Spider):
         job_location_links_list = response.xpath("//a[contains(@href, '/jobs/?l=')]/@href").extract()
         for c, location_li in enumerate(job_location_links_list):
             if reached_endtime():
+                self.logger.info("JobMaster: End run because endtime is reached")
                 break
             self.total_locations += 1
             location_id = "{}_{}".format(response.meta['location_id'], c)
@@ -89,6 +91,7 @@ class JobmasterSpider(scrapy.Spider):
         for attempt in range(5):
             # Run JS Crawler
             if reached_endtime():
+                self.logger.info("JobMaster: End run because endtime is reached")
                 break
             self.runner.run(url, output_file)
 

@@ -109,8 +109,6 @@ class JobNetSpider(scrapy.Spider):
             self.total_jobs += 1
             yield item
 
-        if reached_endtime():
-            break
         # handling pagination
         current_pg_from_query = int(response.url.split('?p=')[-1])
         selected_page = response.xpath("//a[@class='btnPaging Selected']")
@@ -122,7 +120,9 @@ class JobNetSpider(scrapy.Spider):
                   "".format(selected_pg_no, current_pg_from_query))
             selected_page_no = None
         self.logger.info("Jobnet: Page %s job count = %s, total_jobs=%s", current_pg_from_query, page_job_count, self.total_jobs)
-        if selected_page_no is not None:
+        if reached_endtime():
+            self.logger.info("Jobnet: End run because endtime is reached")
+        elif selected_page_no is not None:
             if current_pg_from_query != selected_page_no:
                 next_url = "http://www.jobnet.co.il/jobs?p=" + str(selected_page_no)
                 yield scrapy.Request(next_url, callback=self.parse)
