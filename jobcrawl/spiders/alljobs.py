@@ -10,7 +10,7 @@ import urllib.parse as urlparse
 from jobcrawl.items import JobItem
 from scrapy.http import HtmlResponse
 from jobcrawl.js_scraper import JSScraperRunner
-from endtime_check import reached_endtime
+from jobcrawl.endtime_check import reached_endtime
 
 
 class AllJobsSpider(scrapy.Spider):
