@@ -3,7 +3,7 @@
 # import codecs
 # import locale
 import scrapy
-import urllib.parse as urlparse
+from urllib.parse import urlparse, parse_qs
 
 from jobcrawl.items import JobItem
 from jobcrawl.endtime_check import reached_endtime
@@ -33,15 +33,17 @@ class JobNetSpider(scrapy.Spider):
                 "normalize-space(string())").extract_first()
 
             job_link = job_row.xpath(".//a[contains(@href, '/jobs?')]/@href").extract_first()
-            try:
-                job_id = urlparse.parse_qs(job_link).get('positionid')[0]
-            except:
-                job_id = ""
-
             if job_link:
                 job_link = "http://www.jobnet.co.il{}".format(job_link)
             else:
                 job_link = ""
+
+            try:
+                parsed = urlparse(job_link)
+                qs = parse_qs(parsed.query)
+                job_id = ps.get('positionid')[0]
+            except:
+                job_id = ""
 
             job_post_date = job_row.xpath(
                 ".//p[@itemprop='datePosted']/text()"
