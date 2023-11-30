@@ -41,7 +41,7 @@ class JobNetSpider(scrapy.Spider):
             try:
                 parsed = urlparse(job_link)
                 qs = parse_qs(parsed.query)
-                job_id = ps.get('positionid')[0]
+                job_id = qs.get('positionid')[0]
             except:
                 job_id = ""
 
