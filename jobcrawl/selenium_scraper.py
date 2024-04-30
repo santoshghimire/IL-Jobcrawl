@@ -4,10 +4,11 @@ from selenium import webdriver
 from pyvirtualdisplay import Display
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.chrome.options import Options
+# from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.remote.remote_connection import LOGGER
 from selenium.common.exceptions import WebDriverException, TimeoutException
+from selenium.webdriver.chrome.service import Service
 
 
 LOGGER.setLevel(logging.WARNING)
@@ -34,7 +35,9 @@ class DrushimScraper(object):
 
     def init_driver(self):
         self.close_driver()
-        chrome_options = Options()
+        chrome_driver = '/usr/local/bin/chromedriver'
+        service = Service(executable_path=chrome_driver)
+        chrome_options = webdriver.ChromeOptions()
         chrome_options.page_load_strategy = 'eager'
         chrome_options.add_argument("start-maximized")
         chrome_options.add_argument("enable-automation")
@@ -45,8 +48,7 @@ class DrushimScraper(object):
         chrome_options.add_argument("--disable-browser-side-navigation")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--enable-javascript")
-        chrome_driver = '/usr/local/bin/chromedriver'
-        self.driver = webdriver.Chrome(chrome_options=chrome_options, executable_path=chrome_driver)
+        self.driver = webdriver.Chrome(service=service, options=chrome_options)
 
     def scrape(self, offset=None):
         self.log.info("Scraping %s", self.url)
