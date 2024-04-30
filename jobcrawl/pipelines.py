@@ -105,7 +105,7 @@ class JobscrawlerPipeline(object):
                     item['Job']['Site'],
                     item['Job']['Company'],
                     item['Job']['Company_jobs'],
-                    item['Job']['Job_id'],
+                    str(item['Job']['Job_id']),
                     item['Job']['Job_title'],
                     item['Job']['Job_Description'],
                     item['Job']['Job_Post_Date'],
