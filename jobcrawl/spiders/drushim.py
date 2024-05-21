@@ -72,7 +72,7 @@ class DrushimSpider(scrapy.Spider):
 
             try:
                 job_title = job_container.xpath(
-                    ".//span[@class='job-url primary--text font-weight-bold primary--text']").xpath(
+                    './/span[contains(@class, "job-url primary--text")]').xpath(
                         "normalize-space(string())").extract_first()
             except:
                 job_title = ""
@@ -92,8 +92,9 @@ class DrushimSpider(scrapy.Spider):
                 company_jobs = job_link
 
             try:
-                job_description = job_container.xpath(".//div[@class='layout job-intro vacancyMain mt-2 px-md-4 px-2 py-1 wrap pointer']").xpath(
-                    "normalize-space(string())").extract_first()
+                job_description = job_container.xpath(
+                        './/div[contains(@class, "layout job-intro vacancyMain")]').xpath("normalize-space(string())").extract_first()
+                        
             except:
                 job_description = ""
 

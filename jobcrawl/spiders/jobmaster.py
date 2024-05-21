@@ -111,6 +111,7 @@ class JobmasterSpider(scrapy.Spider):
 
             job_article_div_list = response.xpath(
                 "//article[@class='CardStyle JobItem font14 ']")
+
             # job_article_div_list = response.xpath("//article[contains(@class,'CardStyle JobItem font14')]")
             page_job_count = 0
             for job_article in job_article_div_list:
@@ -123,15 +124,16 @@ class JobmasterSpider(scrapy.Spider):
                     job_id = ""
                     job_link = ""
 
-                job_item_sel = job_article.xpath(".//div[@class='JobItemRight Transition']")
+                job_item_sel = job_article.xpath(
+                        './/div[contains(@class, "JobItemRight Transition")]')
                 try:
                     job_title = job_item_sel.xpath(
-                        ".//a[@class='CardHeader']/text()").extract_first()
+                        './/a[contains(@class, "CardHeader")]').xpath("normalize-space(string())").extract_first()
                 except:
                     job_title = ''
 
                 try:
-                    company = job_item_sel.xpath(".//a[@class='font14 CompanyNameLink']").xpath("normalize-space(string())").extract_first()
+                    company = job_item_sel.xpath('.//a[contains(@class, "font14 CompanyNameLink")]').xpath("normalize-space(string())").extract_first()
                     if not company:
                         company = job_item_sel.xpath(".//span[@class='font14 ByTitle']/text()").extract_first()
                     if company:
@@ -147,7 +149,7 @@ class JobmasterSpider(scrapy.Spider):
                     company_jobs = ""
 
                 try:
-                    country_areas = job_item_sel.xpath(".//li[@class='jobLocation']/text()").extract_first()
+                    country_areas = job_item_sel.xpath(".//li[@class='jobLocation']/span").xpath("normalize-space(string())").extract_first()
                 except:
                     country_areas = ""
 
@@ -167,7 +169,7 @@ class JobmasterSpider(scrapy.Spider):
 
                 try:
                     all_child_elem_job_item = job_item_sel.xpath("./*")
-                    child_index = 3
+                    child_index = 2
                     job_description = ""
                     while child_index < len(all_child_elem_job_item):
                         job_description += all_child_elem_job_item[
@@ -181,7 +183,7 @@ class JobmasterSpider(scrapy.Spider):
                     job_description = ""
 
                 try:
-                    job_post_date = job_item_sel.xpath("./div[@class='paddingTop10px']/span[@class='Gray']/text()").extract_first()
+                    job_post_date = job_item_sel.xpath("./div[@class='paddingTop10px']/span[@class='Gray']").xpath("normalize-space(string())").extract_first()
                     job_post_date = self.find_date(job_post_date)
 
                 except:
@@ -212,14 +214,11 @@ class JobmasterSpider(scrapy.Spider):
             self.logger.info("Jobmaster: Location %s, Page %s job count = %s, location_total_jobs=%s, total_jobs=%s",
                 location_id, page, page_job_count, self.location_total_jobs[location_id], self.total_jobs)
 
-            pagi_link_sel_list = response.xpath("//a[@class='paging']")
-            for pagi_link_sel in pagi_link_sel_list:
-                nextpagi_text = pagi_link_sel.xpath(
-                    "text()").extract_first()
-                if nextpagi_text == u'\u05d4\u05d1\u05d0\xbb' or nextpagi_text == u'\u05d4\u05d1\u05d0 \xbb':
-                    next_url = response.urljoin(pagi_link_sel.xpath("@href").extract_first())
-                    yield scrapy.Request(next_url, self.parse_each_location, dont_filter=True,
-                                         meta={'location_id': location_id})
+            next_page = response.xpath("//a[@class='paginationPrev']/@href").extract_first()
+            if next_page:
+                next_url = response.urljoin(next_page)
+                yield scrapy.Request(next_url, self.parse_each_location, dont_filter=True,
+                                             meta={'location_id': location_id})
             break
 
     @staticmethod
