@@ -154,7 +154,7 @@ class ClientChanges:
 
         df_new_companies.to_excel(
             writer, index=False, sheet_name='New_Companies',
-            columns=new_columns, encoding='utf-8')
+            columns=new_columns)
 
         # ****** GET REMOVED COMPANIES ******
         # ***********************************
@@ -176,7 +176,7 @@ class ClientChanges:
 
         df_removed_companies.to_excel(
             writer, index=False, sheet_name='Companies_That_left',
-            columns=columns, encoding='utf-8')
+            columns=columns)
 
         # save the excel
         writer.save()
