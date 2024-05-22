@@ -52,7 +52,12 @@ class LeftCompany(scrapy.Spider):
 
         # prepare clientchanges report
         self.c = ClientChanges()
-        self.c.start()
+        try:
+            self.c.start()
+            self.clientchanges_ok = True
+        except Exception as exp:
+            self.logger.exception('Failed to compute clientchanges with error = {}'.format(exp))
+            self.clientchanges_ok = False
 
         # self.wb = load_workbook(self.excel_path)
         # self.left_sheet = self.wb.get_sheet_by_name('Companies_That_left')
@@ -158,69 +163,75 @@ class LeftCompany(scrapy.Spider):
         # writer.save()
         # self.logger.info('Saved clientchange sheet.')
 
-        # send email for competitior changes
-        directory = 'daily_competitor_client_changes'
-        file_name = '{}_Daily-Competitor-Client-Change.xlsx'.format(
-            today_str)
+        if self.clientchanges_ok:
+            # send email for competitior changes
+            directory = 'daily_competitor_client_changes'
+            file_name = '{}_Daily-Competitor-Client-Change.xlsx'.format(
+                today_str)
 
-        self.stats = self.c.get_stats()
-        self.logger.info('Obtained stats')
-        # condition = (
-        #     self.stats['total_jobs']['Drushim'] and
-        #     self.stats['total_jobs']['JobMaster'] and
-        #     self.stats['total_jobs']['AllJobs'] and
-        #     self.stats['total_jobs']['JobNet']
-        # )
-        # if not condition:
-        #     # file corrupt
-        #     send_plain_email(
-        #         subject="IL Job site data corrupt",
-        #         body="Data corrupt for {}. Please check.".format(
-        #             today_str
-        #         )
-        #     )
-        #     return
+            self.stats = self.c.get_stats()
+            self.logger.info('Obtained stats')
+            # condition = (
+            #     self.stats['total_jobs']['Drushim'] and
+            #     self.stats['total_jobs']['JobMaster'] and
+            #     self.stats['total_jobs']['AllJobs'] and
+            #     self.stats['total_jobs']['JobNet']
+            # )
+            # if not condition:
+            #     # file corrupt
+            #     send_plain_email(
+            #         subject="IL Job site data corrupt",
+            #         body="Data corrupt for {}. Please check.".format(
+            #             today_str
+            #         )
+            #     )
+            #     return
 
-        body = """
-Please find the attachment for {subject}.
+            body = """
+    Please find the attachment for {subject}.
 
---- New / Removed Companies per Site ---
-Drushim : (new) {drushim_new}, (removed) {drushim_removed}
-JobMaster : (new) {jobmaster_new}, (removed) {jobmaster_removed}
-AllJobs : (new) {alljobs_new}, (removed) {alljobs_removed}
-JobNet : (new) {jobnet_new}, (removed) {jobnet_removed}
+    --- New / Removed Companies per Site ---
+    Drushim : (new) {drushim_new}, (removed) {drushim_removed}
+    JobMaster : (new) {jobmaster_new}, (removed) {jobmaster_removed}
+    AllJobs : (new) {alljobs_new}, (removed) {alljobs_removed}
+    JobNet : (new) {jobnet_new}, (removed) {jobnet_removed}
 
---- New Companies ---
-Drushim : {drushim_new}
-JobMaster : {jobmaster_new}
-AllJobs : {alljobs_new}
-JobNet : {jobnet_new}
+    --- New Companies ---
+    Drushim : {drushim_new}
+    JobMaster : {jobmaster_new}
+    AllJobs : {alljobs_new}
+    JobNet : {jobnet_new}
 
---- Removed Companies ---
-Drushim : {drushim_removed}
-JobMaster : {jobmaster_removed}
-AllJobs : {alljobs_removed}
-JobNet : {jobnet_removed}
-        """.format(
-            subject=file_name, drushim_new=self.stats['new']['Drushim'],
-            drushim_removed=self.stats['removed']['Drushim'],
-            jobmaster_new=self.stats['new']['JobMaster'],
-            jobmaster_removed=self.stats['removed']['JobMaster'],
-            alljobs_new=self.stats['new']['AllJobs'],
-            alljobs_removed=self.stats['removed']['AllJobs'],
-            jobnet_new=self.stats['new']['JobNet'],
-            jobnet_removed=self.stats['removed']['JobNet']
-        )
+    --- Removed Companies ---
+    Drushim : {drushim_removed}
+    JobMaster : {jobmaster_removed}
+    AllJobs : {alljobs_removed}
+    JobNet : {jobnet_removed}
+            """.format(
+                subject=file_name, drushim_new=self.stats['new']['Drushim'],
+                drushim_removed=self.stats['removed']['Drushim'],
+                jobmaster_new=self.stats['new']['JobMaster'],
+                jobmaster_removed=self.stats['removed']['JobMaster'],
+                alljobs_new=self.stats['new']['AllJobs'],
+                alljobs_removed=self.stats['removed']['AllJobs'],
+                jobnet_new=self.stats['new']['JobNet'],
+                jobnet_removed=self.stats['removed']['JobNet']
+            )
 
-        send_email(directory=directory, file_name=file_name, body=body)
-        self.logger.info('Client change email sent')
+            send_email(directory=directory, file_name=file_name, body=body)
+            self.logger.info('Client change email sent')
+
         # send an email for 3 excel attachments
         directory = "IL-jobcrawl-data"
         file_to_send = []
         for site in ['Drushim', 'Alljobs', 'Jobmaster', 'Jobnet']:
             file_name = '{}_{}.xlsx'.format(
                 today_str, site)
-            # check if the file is corrupt
+            # check if the file is corrupt/does not exist
+            file_path = '{}/{}'.format(directory, file_name)
+            if not os.path.isfile(file_path):
+                self.logger.info('{} file not found, skip'.format(site))
+                continue
             try:
                 load_workbook('{}/{}'.format(directory, file_name))
                 self.logger.info('{} File good'.format(site))
