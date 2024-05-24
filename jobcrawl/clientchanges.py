@@ -45,7 +45,10 @@ class ClientChanges:
         self.excel_writer()
 
     def get_stats(self):
-        new_removed_stats = self.get_removed_stats()
+        try:
+            new_removed_stats = self.get_removed_stats()
+        except Exception as exp:
+            new_removed_stats = {}
         total_stats = self.get_total_stats()
         new_removed_stats.update(total_stats)
         return new_removed_stats

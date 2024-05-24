@@ -37,6 +37,12 @@ class JobscrawlerPipeline(object):
             'jobmaster': 0,
             'jobnet': 0,
         }
+        self.job_data_excel_count = {
+            'alljobs': 0,
+            'drushim': 0,
+            'jobmaster': 0,
+            'jobnet': 0,
+        }
         # self.ids_seen = set()
 
     @classmethod
@@ -139,12 +145,15 @@ class JobscrawlerPipeline(object):
                 item['Job']['AllJobs_Job_class'], crawl_date_str,
                 item['Job']['unique_id']
             ])
+            if spider.name in self.job_data_excel_count:
+                self.job_data_excel_count[spider.name] += 1
+                if not self.job_data_excel_count[spider.name] % 100:
+                    self.save_excel()
             return item
 
     def close_spider(self, spider):
         if spider.name != 'left':
-            # save each spider excel file
-            self.workbook.save(self.temp_each_site_excel_file_path)
+            self.save_excel()
         try:
             self.conn.close()
         except:
@@ -155,6 +164,10 @@ class JobscrawlerPipeline(object):
             self.delete_files('alljobs_htmls')
         elif spider.name == 'jobmaster':
             self.delete_files('jobmaster_htmls')
+
+    def save_excel(self):
+        # save each spider excel file
+        self.workbook.save(self.temp_each_site_excel_file_path)
 
     def delete_files(self, html_dir):
         try:

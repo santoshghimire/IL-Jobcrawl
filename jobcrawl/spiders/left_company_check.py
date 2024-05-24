@@ -162,15 +162,13 @@ class LeftCompany(scrapy.Spider):
         # left_companies_df.to_excel(writer, 'Companies_That_left', index=False)
         # writer.save()
         # self.logger.info('Saved clientchange sheet.')
-
+        self.stats = self.c.get_stats()
+        self.logger.info('Obtained stats')
         if self.clientchanges_ok:
             # send email for competitior changes
             directory = 'daily_competitor_client_changes'
             file_name = '{}_Daily-Competitor-Client-Change.xlsx'.format(
                 today_str)
-
-            self.stats = self.c.get_stats()
-            self.logger.info('Obtained stats')
             # condition = (
             #     self.stats['total_jobs']['Drushim'] and
             #     self.stats['total_jobs']['JobMaster'] and

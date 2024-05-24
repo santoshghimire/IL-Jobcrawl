@@ -215,7 +215,7 @@ class JobmasterSpider(scrapy.Spider):
                 location_id, page, page_job_count, self.location_total_jobs[location_id], self.total_jobs)
 
             next_page = response.xpath("//a[@class='paginationPrev']/@href").extract_first()
-            if next_page:
+            if next_page and not reached_endtime():
                 next_url = response.urljoin(next_page)
                 yield scrapy.Request(next_url, self.parse_each_location, dont_filter=True,
                                              meta={'location_id': location_id})
