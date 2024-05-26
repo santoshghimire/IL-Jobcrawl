@@ -109,9 +109,9 @@ class ClientChanges:
     def get_removed_stats(self):
         stats = {'new': {}, 'removed': {}}
         df_new_companies = pd.read_excel(
-            self.excel_file_path, sheetname='New_Companies')
+            self.excel_file_path, sheet_name='New_Companies')
         df_removed_companies = pd.read_excel(
-            self.excel_file_path, sheetname='Companies_That_left')
+            self.excel_file_path, sheet_name='Companies_That_left')
         for company in ["Drushim", "AllJobs", "JobMaster", "JobNet"]:
             stats['new'][company] = len(
                 df_new_companies[df_new_companies['Site'] == company])
@@ -151,9 +151,9 @@ class ClientChanges:
         df_new_companies = df_new_companies.sort_values(
             by=['Site', 'Company'])
 
-        df_new['Company Site URL'] = ""
-        df_new['Company Phone'] = ""
-        df_new['Company Email'] = ""
+        df_new_companies['Company Site URL'] = ""
+        df_new_companies['Company Phone'] = ""
+        df_new_companies['Company Email'] = ""
 
         df_new_companies.to_excel(
             writer, index=False, sheet_name='New_Companies',
@@ -182,7 +182,7 @@ class ClientChanges:
             columns=columns)
 
         # save the excel
-        writer.save()
+        writer.close()
 
     def clean_residual_database(self, month_range):
         format_strings = ','.join(['"%s"'] * len(month_range))
