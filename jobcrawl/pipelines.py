@@ -28,7 +28,7 @@ class JobscrawlerPipeline(object):
             user=db_setting['user'],
             passwd=db_setting['passwd'],
             db=db_setting['db'],
-            charset='utf8'
+            charset='utf8mb4'
         )
         self.cur = self.conn.cursor()
         self.dropped_count = {
