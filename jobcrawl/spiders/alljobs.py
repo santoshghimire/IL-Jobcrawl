@@ -90,6 +90,7 @@ class AllJobsSpider(scrapy.Spider):
             if job_post_date == 'לפני דקה':
                 job_post_date = today_date_str
             else:
+                self.logger.error(u"Failed to find job post date from str %s", job_post_date)
                 job_post_date = ""
         return job_post_date
 
@@ -121,10 +122,10 @@ class AllJobsSpider(scrapy.Spider):
 
             response = HtmlResponse(url=url, body=body, encoding='utf-8')
             fobj.close()
-            try:
-                os.remove(output_file)
-            except OSError:
-                pass
+            # try:
+            #     os.remove(output_file)
+            # except OSError:
+            #     pass
 
             # Parse the HTML response
             job_container_div_list_open = response.xpath("//div[@class='open-board']") or []
@@ -154,8 +155,8 @@ class AllJobsSpider(scrapy.Spider):
 
                 try:
                     job_class = job_item_sel.xpath(
-                        './/div[@class="job-content-top-status-text"]/text()'
-                    ).extract_first()
+                        './/div[@class="job-content-top-status-text"]'
+                    ).xpath('normalize-space(string())').extract_first()
                 except:
                     job_class = ""
 
@@ -190,7 +191,7 @@ class AllJobsSpider(scrapy.Spider):
                 try:
                     company_jobs = job_item_sel.xpath(
                         './/div[@class="job-company-details"]'
-                        '//a[@class="L_Blue gad"]/@href').extract_first()
+                        '//a[contains(@class, "L_Blue gad")]/@href').extract_first()
                     company_jobs = response.urljoin(company_jobs)
                 except:
                     company_jobs = ""
@@ -215,7 +216,8 @@ class AllJobsSpider(scrapy.Spider):
 
                 job_description = ""
                 try:
-                    description_div_id = "job-body-content" + \
+                    # job-content-top-acord7827443
+                    description_div_id = "job-content-top-acord" + \
                                          str(job_id)
                     description_div = job_item_sel.xpath(
                         './/div[@id="' + description_div_id + '"]/*')
