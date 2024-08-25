@@ -1,5 +1,6 @@
 import time
 import os
+import random
 import logging
 from selenium import webdriver
 import urllib.parse as urlparse
@@ -84,7 +85,7 @@ class AlljobsScraper(object):
             self.init_driver(url)
             self.driver.get(url)
 
-        time.sleep(10)
+        time.sleep(random.randint(9, 11))
         self.close_dialogue_box()
         time.sleep(1)
         try:
