@@ -9,7 +9,8 @@ import datetime
 import urllib.parse as urlparse
 from jobcrawl.items import JobItem
 from scrapy.http import HtmlResponse
-from jobcrawl.js_scraper import JSScraperRunner
+# from jobcrawl.js_scraper import JSScraperRunner
+from jobcrawl.alljobs_selenium import AlljobsScraper
 from jobcrawl.endtime_check import reached_endtime
 
 
@@ -28,7 +29,7 @@ class AllJobsSpider(scrapy.Spider):
         self.html_dir_name = 'alljobs_htmls'
         if not os.path.exists(self.html_dir_name):
             os.makedirs(self.html_dir_name)
-        self.runner = JSScraperRunner(self.logger)
+        self.runner = AlljobsScraper(self.logger)
         self.total_jobs = 0
         self.max_page = 1500
 
@@ -98,24 +99,12 @@ class AllJobsSpider(scrapy.Spider):
         url = response.url
         parsed = urlparse.urlparse(url)
         page = urlparse.parse_qs(parsed.query)['page'][0]
-        fname = "page_{}.html".format(page)
-        output_file = os.path.join(self.html_dir_name, fname)
-
         proper_nextpage_found = False
         for attempt in range(5):
-            # Run JS Crawler
-            self.runner.run(url, output_file)
-
-            if not os.path.isfile(output_file):
-                self.logger.error("Output file not present. url=%s, attempt=%s, remaining=%s", url, attempt, 4 - attempt)
-                if self.should_end_run(page, endpage_scraped=False):
-                    break
-                continue
-
-            fobj = open(output_file)
-            body = fobj.read()
+            # Run Selenium crawler
+            body = self.runner.parse(url)
             if not body:
-                self.logger.error("Output file empty. url=%s, attempt=%s, remaining=%s", url, attempt, 4 - attempt)
+                self.logger.error("Output empty. url=%s, attempt=%s, remaining=%s", url, attempt, 4 - attempt)
                 if self.should_end_run(page, endpage_scraped=False):
                     break
                 continue
