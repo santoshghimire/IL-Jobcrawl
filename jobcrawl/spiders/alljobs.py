@@ -110,12 +110,6 @@ class AllJobsSpider(scrapy.Spider):
                 continue
 
             response = HtmlResponse(url=url, body=body, encoding='utf-8')
-            fobj.close()
-            # try:
-            #     os.remove(output_file)
-            # except OSError:
-            #     pass
-
             # Parse the HTML response
             job_container_div_list_open = response.xpath("//div[@class='open-board']") or []
             job_container_div_list_organic = response.xpath("//div[@class='organic-board']") or []

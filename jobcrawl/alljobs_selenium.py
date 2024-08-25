@@ -84,9 +84,9 @@ class AlljobsScraper(object):
             self.init_driver(url)
             self.driver.get(url)
 
-        time.sleep(60)
-        self.close_dialogue_box()
         time.sleep(10)
+        self.close_dialogue_box()
+        time.sleep(1)
         try:
             job_container_div_list_open = self.driver.find_elements(By.CSS_SELECTOR, 'div.open-board')
             print(bool(job_container_div_list_open), len(job_container_div_list_open))
