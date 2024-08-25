@@ -165,9 +165,11 @@ class AllJobsSpider(scrapy.Spider):
                     else:
                         # Confidential company
                         company = job_item_sel.xpath(
-                            './/div[@class="T14"]').xpath('/normalize-space(string())').extract_first()
+                            './/div[@class="T14"]').xpath('normalize-space(string())').extract_first()
                         if company:
                             company = company.strip()
+                        else:
+                            company = u'חברה חסויה'
                 except:
                     company = ""
 
