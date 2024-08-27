@@ -120,10 +120,17 @@ class AlljobsScraper(object):
 
     def save(self, i):
         screenshot_file = os.path.join(self.screenshot_dir, 'alljobs_{}.png'.format(i))
-        self.driver.save_screenshot(screenshot_file)
+        try:
+            self.driver.save_screenshot(screenshot_file)
+        except Exception:
+            self.log.exception("Failed to save screenshot %s", screenshot_file)
         html_file = os.path.join(self.html_dir, 'alljobs_{}.html'.format(i))
-        with open(html_file, 'w') as fp:
-            fp.write(self.driver.page_source)
+        try:
+            html_body = self.driver.page_source
+            with open(html_file, 'w') as fp:
+                fp.write(html_body)
+        except Exception:
+            self.log.exception("Failed to save html page %s", i)
 
     def close_driver(self):
         try:
