@@ -48,7 +48,7 @@ class AlljobsScraper(object):
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-infobars")
-        chrome_options.add_argument("--disable-dev-shm-usage")
+        # chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--disable-browser-side-navigation")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--enable-javascript")
@@ -85,27 +85,29 @@ class AlljobsScraper(object):
             self.init_driver(url)
             self.driver.get(url)
 
-        time.sleep(random.randint(9, 11))
-        self.close_dialogue_box()
-        time.sleep(1)
+        time.sleep(random.randint(3, 6))
+        parsed = urlparse.urlparse(url)
+        page = urlparse.parse_qs(parsed.query)['page'][0]
+        initial = True if str(page) == '1' else False
+        if initial or not self.found_job_boards():
+            self.close_dialogue_box(initial=initial)
+        body = self.save(page)
+        return body
+
+    def found_job_boards(self):
         try:
             job_container_div_list_open = self.driver.find_elements(By.CSS_SELECTOR, 'div.open-board')
-            print(bool(job_container_div_list_open), len(job_container_div_list_open))
+            job_container_div_list_open = job_container_div_list_open or []
         except:
             print("Failed to find job boards open")
         try:
             job_container_div_list_organic = self.driver.find_elements(BY.CSS_SELECTOR, 'div.organic-board')
-            print(bool(job_container_div_list_organic), len(job_container_div_list_organic))
+            job_container_div_list_organic = job_container_div_list_organic or []
         except:
             print("Failed to find job boards organic")
+        return bool(job_container_div_list_open + job_container_div_list_organic)
 
-
-        parsed = urlparse.urlparse(url)
-        page = urlparse.parse_qs(parsed.query)['page'][0]
-        self.save(page)
-        return self.driver.page_source
-
-    def close_dialogue_box(self):
+    def close_dialogue_box(self, initial=False):
         try:
             self.driver.find_element(By.ID, 'cboxClose').click()
             print("Closed dialog box div")
@@ -117,20 +119,26 @@ class AlljobsScraper(object):
             print("Closed dialog box img")
         except:
             print("Failed to click img close btn")
+        time.sleep(1)
 
     def save(self, i):
-        screenshot_file = os.path.join(self.screenshot_dir, 'alljobs_{}.png'.format(i))
-        try:
-            self.driver.save_screenshot(screenshot_file)
-        except Exception:
-            self.log.exception("Failed to save screenshot %s", screenshot_file)
+        if i < 5:
+            self.take_screenshot(i)
         html_file = os.path.join(self.html_dir, 'alljobs_{}.html'.format(i))
         try:
             html_body = self.driver.page_source
             with open(html_file, 'w') as fp:
                 fp.write(html_body)
+            return html_body
         except Exception:
             self.log.exception("Failed to save html page %s", i)
+
+    def take_screenshot(self, i):
+        screenshot_file = os.path.join(self.screenshot_dir, 'alljobs_{}.png'.format(i))
+        try:
+            self.driver.save_screenshot(screenshot_file)
+        except Exception:
+            self.log.exception("Failed to save screenshot %s", screenshot_file)
 
     def close_driver(self):
         try:
