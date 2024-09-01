@@ -87,7 +87,7 @@ class AlljobsScraper(object):
 
         time.sleep(random.randint(3, 6))
         parsed = urlparse.urlparse(url)
-        page = urlparse.parse_qs(parsed.query)['page'][0]
+        page = int(urlparse.parse_qs(parsed.query)['page'][0])
         initial = True if str(page) == '1' else False
         if initial or not self.found_job_boards():
             self.close_dialogue_box(initial=initial)
