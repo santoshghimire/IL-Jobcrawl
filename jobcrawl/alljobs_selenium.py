@@ -95,6 +95,7 @@ class AlljobsScraper(object):
         return body
 
     def found_job_boards(self):
+        job_container_div_list_open, job_container_div_list_organic = [], []
         try:
             job_container_div_list_open = self.driver.find_elements(By.CSS_SELECTOR, 'div.open-board')
             job_container_div_list_open = job_container_div_list_open or []
