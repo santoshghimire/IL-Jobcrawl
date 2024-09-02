@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+import requests
 import scrapy
+import time
 # from scrapy.shell import inspect_response
+from dateutil.parser import parse
 from scrapy import signals
 from jobcrawl.items import JobItem
 from scrapy.http import HtmlResponse
@@ -23,6 +26,7 @@ class DrushimSpider(scrapy.Spider):
     scrape_url = 'https://www.drushim.co.il/jobs/search/%22%22/?ssaen=1'
     start_urls = (scrape_url, )
     seen_job_ids = set()
+    api_url = 'https://www.drushim.co.il/api/jobs/search?searchTerm=%22%22&ssaen=1&isAA=true&page={}&isAA=true'
 
     def __init__(self):
         # sys.stdout = codecs.getwriter(
@@ -33,7 +37,110 @@ class DrushimSpider(scrapy.Spider):
         dispatcher.connect(self.spider_closed, signals.spider_closed)
         self.total_jobs = 0
 
+    # Start New API way of scraping
     def parse(self, response):
+        page = 1
+        for page_source in self.selenium_scraper.scrape():
+            if reached_endtime():
+                self.logger.info("Drushim: End run because endtime is reached")
+                break
+            response = HtmlResponse(url=self.scrape_url, body=page_source, encoding='utf-8')
+            page_job_count = 0
+            for item in self.parse_html(response):
+                self.total_jobs += 1
+                page_job_count += 1
+                yield item
+            self.logger.info("Drushim: Page %s job count = %s, total_jobs=%s", page, page_job_count, self.total_jobs)
+            break  # IMPORTANT - We only need first page - 25 jobs.
+
+        # Start calling api
+        while True:
+            if reached_endtime():
+                self.logger.info("Drushim: End run because endtime is reached")
+                break
+            api_res = self.get_api_results(page=page)
+            page_job_count = 0
+            for item in self.parse_api_results(api_res):
+                self.total_jobs += 1
+                page_job_count += 1
+                yield item
+
+            self.logger.info("Drushim: API RES Page %s job count = %s, total_jobs=%s", page, page_job_count, self.total_jobs)
+            page = api_res.get('NextPageNumber', page + 1)  # Next Page
+            if page == -1:
+                # Reached endpage
+                break
+            time.sleep(random.randint(3, 6))
+
+        self.logger.info("Drushim: Scraping finished. Total Pages = %s, Total_jobs=%s", page, self.total_jobs)
+
+    def get_api_results(self, page=1):
+        url = self.api_url.format(page)
+        for i in range(3):
+            i += 1
+            try:
+                response = requests.get(url)
+            except Exception as exp:
+                self.logger.exception("Drushim: [Attempt {}]: Failed to fetch api results for page {}".format(i, page))
+                continue
+            if response.status_code != 200:
+                self.logger.error("Drushim: [Attempt {}]: Got not ok status code {} for api results for page {}"
+                    "".format(i, response.status_code, page))
+            try:
+                res_json = response.json()
+            except Exception as exp:
+                self.logger.error("Drushim: [Attempt {}]: Failed to parse json result. status code={}, page={}"
+                    "".format(i, response.status_code, page))
+                continue
+            if 'ResultList' not in res_json:
+                self.logger.error("Drushim: [Attempt {}]: Invalid json result obtained. status code={}, page={}, json result={}"
+                    "".format(i, response.status_code, page, res_json))
+                continue
+            return res_json
+
+    def parse_api_results(self, api_res):
+        for job in api_res.get('ResultList') or []:
+            job_link = job.get('JobInfo', {}).get('Link')
+            job_url = "{}{}".format(self.base_url, job_link)
+            job_id = '-'.join(job_link.strip('/').split('/')[-2:])
+
+            job_description = job.get('JobContent', {}).get('Description', '')
+            job_requirement = job.get('JobContent', {}).get('Requirement', '')
+
+            try:
+                job_post_date = parse(job.get('JobInfo', {}).get('Date', ''))
+                job_post_date = job_post_date.strftime("%d/%m/%Y")
+            except:
+                self.logger.error("Failed to parse job post date")
+                job_post_date = datetime.date.today().strftime("%d/%m/%Y")
+
+            categories = []
+            for category in job.get('JobContent', {}).get('Categories', []):
+                if category.get('NameInHebrew', ''):
+                    categories.append(category['NameInHebrew'])
+
+            country_areas = [a.get('City', '') for a in job.get('JobContent', {}).get('Addresses', [])]
+
+            item = JobItem()
+            item['Job'] = {
+                'Site': 'Drushim',
+                'Company': job.get('Company', {}).get('CompanyDisplayName'),
+                'Company_jobs': "{}{}".format(self.base_url, job.get('Company', {}).get('ToUrl')),
+                'Job_id': job_id,
+                'Job_title': job.get('JobContent', {}).get('Name'),
+                'Job_Description': "\n".join([job_description, job_requirement]),
+                'Job_Post_Date': job_post_date,
+                'Job_URL': job_url,
+                'Country_Areas': " ".join(country_areas),
+                'Job_categories': " ".join(categories),
+                'AllJobs_Job_class': '',
+                'unique_id': 'drushim_{}'.format(job_id)
+            }
+            yield item
+
+    # End New API way of scraping
+
+    def parse_old(self, response):
         page = 1
         for page_source in self.selenium_scraper.scrape():
             if reached_endtime():
