@@ -52,6 +52,7 @@ class AlljobsScraper(object):
         chrome_options.add_argument("--disable-browser-side-navigation")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--enable-javascript")
+        chrome_options.add_argument("--force-device-scale-factor=1")
         self.driver = webdriver.Chrome(service=service, options=chrome_options)
         self.log.info("WebDriver initialized")
 
@@ -123,8 +124,7 @@ class AlljobsScraper(object):
         time.sleep(1)
 
     def save(self, i):
-        if i < 5:
-            self.take_screenshot(i)
+        self.take_screenshot(i)
         html_file = os.path.join(self.html_dir, 'alljobs_{}.html'.format(i))
         try:
             html_body = self.driver.page_source
