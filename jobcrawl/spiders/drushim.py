@@ -105,6 +105,10 @@ class DrushimSpider(scrapy.Spider):
             job_url = "{}{}".format(self.base_url, job_link)
             job_id = '-'.join(job_link.strip('/').split('/')[-2:])
 
+            if not job_id or job_id in self.seen_job_ids:
+                continue
+
+            self.seen_job_ids.add(job_id)
             job_description = job.get('JobContent', {}).get('Description', '')
             job_requirement = job.get('JobContent', {}).get('Requirement', '')
 
