@@ -126,7 +126,7 @@ class DrushimSpider(scrapy.Spider):
             item['Job'] = {
                 'Site': 'Drushim',
                 'Company': job.get('Company', {}).get('CompanyDisplayName'),
-                'Company_jobs': "{}{}".format(self.base_url, job.get('Company', {}).get('ToUrl')),
+                'Company_jobs': "{}/{}".format(self.base_url, job.get('Company', {}).get('ToUrl')),
                 'Job_id': job_id,
                 'Job_title': job.get('JobContent', {}).get('Name'),
                 'Job_Description': "\n".join([job_description, job_requirement]),
