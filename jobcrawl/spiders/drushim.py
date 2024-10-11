@@ -77,7 +77,9 @@ class DrushimSpider(scrapy.Spider):
 
     def get_api_results(self, page=1):
         url = self.api_url.format(page)
-        for i in range(3):
+        error_sleep = 10
+        res_json = {}
+        for i in range(5):
             i += 1
             try:
                 response = requests.get(url)
@@ -85,10 +87,13 @@ class DrushimSpider(scrapy.Spider):
                 self.logger.exception("Drushim: [Attempt {}]: Failed to fetch api results for page {}".format(i, page))
                 continue
             if response.status_code != 200:
+                delay = error_sleep * i
                 self.logger.error("Drushim: [Attempt {}]: Got not ok status code {} for api results for page {}"
-                    "".format(i, response.status_code, page))
+                    ". Sleeping for {} s".format(i, response.status_code, page, delay))
+                time.sleep(delay)
             try:
                 res_json = response.json()
+                time.sleep(0.5)
             except Exception as exp:
                 self.logger.error("Drushim: [Attempt {}]: Failed to parse json result. status code={}, page={}"
                     "".format(i, response.status_code, page))
@@ -98,6 +103,7 @@ class DrushimSpider(scrapy.Spider):
                     "".format(i, response.status_code, page, res_json))
                 continue
             return res_json
+        return res_json
 
     def parse_api_results(self, api_res):
         for job in api_res.get('ResultList') or []:
