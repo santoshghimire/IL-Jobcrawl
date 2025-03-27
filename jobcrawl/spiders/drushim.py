@@ -73,26 +73,28 @@ class DrushimSpider(scrapy.Spider):
 
             self.logger.info("Drushim: API RES Page %s job count = %s, total_jobs=%s", page, page_job_count, self.total_jobs)
             next_page = api_res.get('NextPageNumber', page + 1)  # Next Page
+            api_total_pages = api_res.get('TotalPagesNumber', 0)
             if next_page == -1:
                 if end_confirmation_count > end_confirmation_num:
-                    if page < api_res.get('TotalPagesNumber', 0):
+                    if page < api_total_pages:
                         # Regardless of confirmation, proceed
                         page += 1
                         end_confirmation_count = 1  # Reset
                     else:
                         # Reached endpage
                         self.logger.info("Drushim: Reached END page %s after confirmation %s times. Exit..."
-                            "API RES Page %s job count = %s, total_jobs=%s",
-                            page, end_confirmation_num + 1, page, page_job_count, self.total_jobs)
+                            "API Total pages = %s, API RES Page %s job count = %s, total_jobs=%s",
+                            page, end_confirmation_num + 1, api_total_pages, page, page_job_count, self.total_jobs)
                         break
                 end_confirmation_count += 1  # Retry same page for 3 times
             elif page_job_count == 0:
                 end_confirmation_count = 1
                 if no_results_confirmation_count > no_results_confirmation_num:
-                    if page >= self.max_page:
+                    max_page = min(self.max_page, api_total_pages)
+                    if page >= max_page:
                         self.logger.info("Drushim: Reached max page %s with 0 page job count. Exit..."
                             "API RES Page %s job count = %s, total_jobs=%s",
-                            self.max_page, page, page_job_count, self.total_jobs)
+                            max_page, page, page_job_count, self.total_jobs)
                         break
                     # Actually no results on this page, proceed ahead
                     self.logger.info("Drushim: Found page %s with 0 page job count after confirmation."
