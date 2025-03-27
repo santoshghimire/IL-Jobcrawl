@@ -75,11 +75,16 @@ class DrushimSpider(scrapy.Spider):
             next_page = api_res.get('NextPageNumber', page + 1)  # Next Page
             if next_page == -1:
                 if end_confirmation_count > end_confirmation_num:
-                    # Reached endpage
-                    self.logger.info("Drushim: Reached END page %s after confirmation %s times. Exit..."
-                        "API RES Page %s job count = %s, total_jobs=%s",
-                        page, end_confirmation_num + 1, page, page_job_count, self.total_jobs)
-                    break
+                    if page < api_res.get('TotalPagesNumber', 0):
+                        # Regardless of confirmation, proceed
+                        page += 1
+                        end_confirmation_count = 1  # Reset
+                    else:
+                        # Reached endpage
+                        self.logger.info("Drushim: Reached END page %s after confirmation %s times. Exit..."
+                            "API RES Page %s job count = %s, total_jobs=%s",
+                            page, end_confirmation_num + 1, page, page_job_count, self.total_jobs)
+                        break
                 end_confirmation_count += 1  # Retry same page for 3 times
             elif page_job_count == 0:
                 end_confirmation_count = 1
