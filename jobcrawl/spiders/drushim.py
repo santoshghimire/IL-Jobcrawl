@@ -28,6 +28,7 @@ class DrushimSpider(scrapy.Spider):
     start_urls = (scrape_url, )
     seen_job_ids = set()
     api_url = 'https://www.drushim.co.il/api/jobs/search?searchTerm=%22%22&ssaen=1&isAA=true&page={}&isAA=true'
+    max_page = 5000
 
     def __init__(self):
         # sys.stdout = codecs.getwriter(
@@ -55,6 +56,10 @@ class DrushimSpider(scrapy.Spider):
         #     break  # IMPORTANT - We only need first page - 25 jobs.
 
         # Start calling api
+        end_confirmation_count = 1
+        end_confirmation_num = 2
+        no_results_confirmation_count = 1
+        no_results_confirmation_num = 2
         while True:
             if reached_endtime():
                 self.logger.info("Drushim: End run because endtime is reached")
@@ -67,10 +72,34 @@ class DrushimSpider(scrapy.Spider):
                 yield item
 
             self.logger.info("Drushim: API RES Page %s job count = %s, total_jobs=%s", page, page_job_count, self.total_jobs)
-            page = api_res.get('NextPageNumber', page + 1)  # Next Page
-            if page == -1:
-                # Reached endpage
-                break
+            next_page = api_res.get('NextPageNumber', page + 1)  # Next Page
+            if next_page == -1:
+                if end_confirmation_count > end_confirmation_num:
+                    # Reached endpage
+                    self.logger.info("Drushim: Reached END page %s after confirmation %s times. Exit..."
+                        "API RES Page %s job count = %s, total_jobs=%s",
+                        page, end_confirmation_num + 1, page, page_job_count, self.total_jobs)
+                    break
+                end_confirmation_count += 1  # Retry same page for 3 times
+            elif page_job_count == 0:
+                end_confirmation_count = 1
+                if no_results_confirmation_count > no_results_confirmation_num:
+                    if page >= self.max_page:
+                        self.logger.info("Drushim: Reached max page %s with 0 page job count. Exit..."
+                            "API RES Page %s job count = %s, total_jobs=%s",
+                            self.max_page, page, page_job_count, self.total_jobs)
+                        break
+                    # Actually no results on this page, proceed ahead
+                    self.logger.info("Drushim: Found page %s with 0 page job count after confirmation."
+                            "API RES Page %s job count = %s, total_jobs=%s",
+                            page, page, page_job_count, self.total_jobs)
+                    page = next_page
+                else:
+                    no_results_confirmation_count += 1  # Retry same page for 3 times
+            else:
+                end_confirmation_count = 1
+                no_results_confirmation_count = 1
+                page = next_page
             time.sleep(random.randint(3, 6))
 
         self.logger.info("Drushim: Scraping finished. Total Pages = %s, Total_jobs=%s", page, self.total_jobs)
