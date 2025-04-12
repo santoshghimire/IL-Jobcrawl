@@ -1,6 +1,7 @@
 import smtplib
 import logging
 import mimetypes
+import time
 from email.mime.multipart import MIMEMultipart
 from email import encoders
 from email.mime.audio import MIMEAudio
@@ -9,6 +10,8 @@ from email.mime.image import MIMEImage
 from email.mime.text import MIMEText
 from jobcrawl import settings
 import os
+import base64
+from mailjet_rest import Client
 
 email_from = settings.EMAIL_FROM
 email_to = settings.EMAIL_TO
@@ -16,6 +19,8 @@ smtp_server = settings.SMTP_SERVER
 smtp_port = settings.SMTP_PORT
 username = settings.SMTP_USERNAME
 password = settings.SMTP_PASSWORD
+mailjet_api_key = settings.MAILJET_API_KEY
+mailjet_secret_key = settings.MAILJET_SECRET_KEY
 
 
 def send_plain_email(subject, body, to=None, multi=False):
@@ -42,6 +47,41 @@ def send_plain_email(subject, body, to=None, multi=False):
         'subject={}, body={}'.format(email_to, subject, body))
     logging.info('***************************************************')
     server.quit()
+
+
+
+# Helper to encode file to base64
+def encode_file(path):
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+
+def send_email_mailjet_attach(subject, body, file_to_send):
+    mailjet = Client(auth=(mailjet_api_key, mailjet_secret_key), version='v3.1')
+    attachments = []
+    for fpath in file_to_send:
+        fname = os.path.basename(fpath)
+        attachments.append(
+            {
+                "ContentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "Filename": fname,
+                "Base64Content": encode_file(fpath)
+            })
+
+    to_emails = [{"Email": i} for i in email_to.split(',')]
+    data = {
+        'Messages': [
+            {
+                "From": {"Email": email_from},
+                "To": to_emails,
+                "Subject": subject,
+                "TextPart": body,
+                "Attachments": attachments
+            }
+        ]
+    }
+    result = mailjet.send.create(data=data)
+    logging.info("Mailjet email sent status={}, response={}".format(result.status_code, result.json()))
 
 
 def send_email(directory, file_name, body, multi=False):
@@ -72,16 +112,30 @@ def send_email(directory, file_name, body, multi=False):
 
     msg.attach(textpart)
 
-    server = smtplib.SMTP("{}:{}".format(smtp_server, smtp_port))
-    server.starttls()
-    server.login(username, password)
-    server.sendmail(email_from, email_to.split(","), msg.as_string())
-    logging.info('***************************************************')
-    logging.info('Email Successfully Sent to {} .'
-        'directory={}, file_name={}, body={}'
-        ''.format(email_to, directory, file_name, body))
-    logging.info('***************************************************')
-    server.quit()
+    try:
+        server = smtplib.SMTP("{}:{}".format(smtp_server, smtp_port))
+        server.starttls()
+        server.login(username, password)
+        server.sendmail(email_from, email_to.split(","), msg.as_string())
+        logging.info('***************************************************')
+        logging.info('Email Successfully Sent via SMTP to {} .'
+            'directory={}, file_name={}, body={}'
+            ''.format(email_to, directory, file_name, body))
+        logging.info('***************************************************')
+        server.quit()
+        return
+    except OSError:
+        logging.exception('Sending email with smtp failed. Trying with mailjet')
+
+    try:
+        send_email_mailjet_attach(subject, body, file_to_send)
+        logging.info('***************************************************')
+        logging.info('Email Successfully Sent via Mailjet to {} .'
+            'directory={}, file_name={}, body={}'
+            ''.format(email_to, directory, file_name, body))
+        logging.info('***************************************************')
+    except Exception:
+        logging.exception('Sending email with mailjet api failed.')
 
 
 def get_attachment(file_to_send):
