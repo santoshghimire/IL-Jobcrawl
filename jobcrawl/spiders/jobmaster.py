@@ -142,8 +142,10 @@ class JobmasterSpider(scrapy.Spider):
                     company = ""
 
                 try:
-                    company_jobs = job_item_sel.xpath(".//a[@class='font14 CompanyNameLink']/@href").extract_first()
+                    job_item_bottom = job_article.xpath('.//div[contains(@class, "JobItemBottom")]')
+                    company_jobs = job_item_bottom.xpath('.//span[contains(@class, "bottomItems twoBTNS bottomItemsCompany")]/@onclick').extract_first()
                     if company_jobs:
+                        company_jobs = company_jobs.split('window.open(')[-1].split(',')[0].strip("'")
                         company_jobs = response.urljoin(company_jobs)
                 except:
                     company_jobs = ""
