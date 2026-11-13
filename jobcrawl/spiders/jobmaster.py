@@ -37,40 +37,28 @@ class JobmasterSpider(scrapy.Spider):
 
     def parse(self, response):
         """
-        Get all the links for Location
+        Get all the listing links (locations /jobs/l-... and searches /jobs/q-...) from the homepage.
+        Jobmaster requires login for listing pages beyond page 1, so only page 1 of each listing is
+        scraped; fanning out over every public listing gives the widest guest coverage.
         """
-        job_location_links_list = response.xpath("//a[contains(@href,'/jobs/searchfilterHome.asp?type=ezor&l=')]/@href").extract()
+        job_listing_links = response.xpath(
+            "//a[contains(@href,'/jobs/l-') or contains(@href,'/jobs/q-')]/@href").extract()
+        # Same listing appears both percent-encoded and in plain Hebrew; dedupe on the decoded URL
+        job_listing_links = sorted({urlparse.unquote(response.urljoin(link)).rstrip('/') + '/'
+                                    for link in job_listing_links})
+        self.logger.info("Jobmaster: Found %s listing links", len(job_listing_links))
 
-        for c, location_li in enumerate(job_location_links_list):
-            if reached_endtime():
-                self.logger.info("JobMaster: End run because endtime is reached")
-                break
-            yield scrapy.Request(
-                response.urljoin(location_li),
-                callback=self.parse_each_sub_location,
-                dont_filter=True,
-                meta={"location_id": c}
-            )
-
-
-    def parse_each_sub_location(self, response):
-        if response.status != 200:
-            self.logger.error("{}\n ERROR Code {}: {} \n {}".format(
-                "*" * 30, response.status, response.url, "*" * 30))
-
-        job_location_links_list = response.xpath("//a[contains(@href, '/jobs/?l=')]/@href").extract()
-        for c, location_li in enumerate(job_location_links_list):
+        for c, listing_link in enumerate(job_listing_links):
             if reached_endtime():
                 self.logger.info("JobMaster: End run because endtime is reached")
                 break
             self.total_locations += 1
-            location_id = "{}_{}".format(response.meta['location_id'], c)
-            self.location_total_jobs[location_id] = 0
+            self.location_total_jobs[c] = 0
             yield scrapy.Request(
-                response.urljoin(location_li),
+                listing_link,
                 callback=self.parse_each_location,
                 dont_filter=True,
-                meta={"location_id": location_id}
+                meta={"location_id": c}
             )
 
     def parse_each_location(self, response):
@@ -143,15 +131,14 @@ class JobmasterSpider(scrapy.Spider):
 
                 try:
                     job_item_bottom = job_article.xpath('.//div[contains(@class, "JobItemBottom")]')
-                    company_jobs = job_item_bottom.xpath('.//span[contains(@class, "bottomItems twoBTNS bottomItemsCompany")]/@onclick').extract_first()
+                    company_jobs = job_item_bottom.xpath('.//a[contains(@class, "bottomItemsCompany")]/@href').extract_first()
                     if company_jobs:
-                        company_jobs = company_jobs.split('window.open(')[-1].split(',')[0].strip("'")
                         company_jobs = response.urljoin(company_jobs)
                 except:
                     company_jobs = ""
 
                 try:
-                    country_areas = job_item_sel.xpath(".//li[@class='jobLocation']/span").xpath("normalize-space(string())").extract_first()
+                    country_areas = job_item_sel.xpath(".//li[@class='jobLocation']").xpath("normalize-space(string())").extract_first()
                 except:
                     country_areas = ""
 
@@ -216,11 +203,7 @@ class JobmasterSpider(scrapy.Spider):
             self.logger.info("Jobmaster: Location %s, Page %s job count = %s, location_total_jobs=%s, total_jobs=%s",
                 location_id, page, page_job_count, self.location_total_jobs[location_id], self.total_jobs)
 
-            next_page = response.xpath("//a[@class='paginationPrev']/@href").extract_first()
-            if next_page and not reached_endtime():
-                next_url = response.urljoin(next_page)
-                yield scrapy.Request(next_url, self.parse_each_location, dont_filter=True,
-                                             meta={'location_id': location_id})
+            # No pagination: pages beyond 1 redirect to the jobmaster login page
             break
 
     @staticmethod

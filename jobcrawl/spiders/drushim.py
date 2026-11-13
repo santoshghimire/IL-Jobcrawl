@@ -27,7 +27,7 @@ class DrushimSpider(scrapy.Spider):
     scrape_url = 'https://www.drushim.co.il/jobs/search/%22%22/?ssaen=1'
     start_urls = (scrape_url, )
     seen_job_ids = set()
-    api_url = 'https://www.drushim.co.il/api/jobs/search?searchTerm=%22%22&ssaen=1&isAA=true&page={}&isAA=true'
+    api_url = 'https://webapi.drushim.co.il/api/jobs/search?SearchTerm=%22%22&ssaen=1&isAA=true&page={}'
     max_page = 5000
 
     def __init__(self):
@@ -152,7 +152,7 @@ class DrushimSpider(scrapy.Spider):
 
             self.seen_job_ids.add(job_id)
             job_description = job.get('JobContent', {}).get('Description', '')
-            job_requirement = job.get('JobContent', {}).get('Requirement', '')
+            job_requirement = job.get('JobContent', {}).get('Requirements', '')
 
             try:
                 job_post_date = parse(job.get('JobInfo', {}).get('Date', ''))
