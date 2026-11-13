@@ -314,9 +314,10 @@ def diagnose(name, sruns, items_today, ref):
 
 
 def evaluate(name, cfg, runs, counts, day):
+    """counts is None when the database is unreachable: job counts are then unknown and only the log is used."""
     sruns = sorted((r for r in runs.values() if r['spider'] == name), key=lambda r: r['start'])
-    items_today = counts.get(day, {}).get(cfg['site'], 0)
-    ref = reference_count(counts, cfg['site'], day)
+    items_today = counts.get(day, {}).get(cfg['site'], 0) if counts is not None else None
+    ref = reference_count(counts, cfg['site'], day) if counts is not None else None
     procs = spider_procs(name)
     res = dict(spider=name, site=cfg['site'], cron_start=cfg['start'], jobs_saved_today=items_today, reference=ref,
                runs=[dict(pid=r['pid'], start=r['start'], end=r['end'], ended=r['closed'], items_scraped=r['items'],
@@ -401,7 +402,17 @@ def cmd_check(args):
         if leftovers:
             act('clean up {} leftover Xvfb/Chrome/node processes'.format(len(leftovers)), terminate_all, leftovers)
 
-    counts = db_counts()
+    import pymysql
+    try:
+        counts, db_error = db_counts(), None
+    except pymysql.err.MySQLError as exc:
+        counts, db_error = None, '{}: {}'.format(type(exc).__name__, str(exc)[:200])
+        service = subprocess.run(['systemctl', 'is-active', 'mysql'], capture_output=True, text=True).stdout.strip()
+        say('database unreachable ({}); mysql service: {}'.format(db_error, service or 'unknown'))
+        if not dry:
+            queue_attention('{}:database'.format(day), 'issue', 'database unreachable - spiders cannot save jobs',
+                            [db_error, 'mysql service: ' + (service or 'unknown'),
+                             'job counts unknown; spider checks below are from the logs only'])
     runs = parse_runs(day)
     spiders = {n: evaluate(n, SPIDERS[n], runs, counts, day) for n in names}
 
@@ -409,7 +420,12 @@ def cmd_check(args):
         if res['status'] != 'issue':
             continue
         can_rerun = res['jobs_saved_today'] == 0 or any(i.startswith('hung') for i in res['issues'])
-        blocker = rerun_blocker(name, day, AUTO_RERUNS) if can_rerun else 'partial run - rerun would repeat it'
+        if db_error:
+            blocker = 'database unreachable - a rerun could not save anything'
+        elif can_rerun:
+            blocker = rerun_blocker(name, day, AUTO_RERUNS)
+        else:
+            blocker = 'partial run - rerun would repeat it'
         if not blocker:
             act('rerun {} ({})'.format(name, '; '.join(res['issues'])), start_spider, name, day)
             res['rerun_started'] = not dry
@@ -433,14 +449,16 @@ def cmd_check(args):
         queue_attention('{}:disk'.format(day), 'issue', 'disk {:.0%} full'.format(disk))
 
     status = dict(date=str(day), checkpoint=checkpoint, generated_at=now.isoformat(), dry_run=dry,
-                  jobs_today={c['site']: counts.get(day, {}).get(c['site'], 0) for c in SPIDERS.values()},
+                  jobs_today=None if counts is None else {
+                      c['site']: counts.get(day, {}).get(c['site'], 0) for c in SPIDERS.values()},
+                  db_error=db_error,
                   spiders=spiders, report=report, disk_used=round(disk, 3), actions=actions)
     if not dry:
         save_json(OPS_HOME / 'status' / '{}-{}.json'.format(day, checkpoint), status)
         save_json(OPS_HOME / 'status' / 'latest.json', status)
         prune(OPS_HOME / 'status')
     for name, res in spiders.items():
-        say('{:<10} {:<8} jobs={:<6} ref={} {}'.format(name, res['status'], res['jobs_saved_today'],
+        say('{:<10} {:<8} jobs={:<6} ref={} {}'.format(name, res['status'], str(res['jobs_saved_today']),
                                                         (res['reference'] or {}).get('jobs', '-'),
                                                         '; '.join(res['issues'])))
         for note in res['diagnosis']:
@@ -499,7 +517,9 @@ def cmd_notify(args):
     for it in reminders:
         lines.append('* Reminder - PR still open: {} {}'.format(it['title'], it['url']))
     if final:
-        lines += ['', 'Jobs saved today: ' + ', '.join('{} {}'.format(s, n) for s, n in final['jobs_today'].items())]
+        jobs = final.get('jobs_today')
+        lines += ['', 'Jobs saved today: ' + (', '.join('{} {}'.format(s, n) for s, n in jobs.items())
+                                              if jobs else 'unknown (database unreachable)')]
         auto = [a for st in ('morning', 'final')
                 for a in load_json(OPS_HOME / 'status' / '{}-{}.json'.format(day, st), {}).get('actions', [])]
         if auto:
