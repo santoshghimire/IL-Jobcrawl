@@ -24,29 +24,50 @@ mailjet_secret_key = settings.MAILJET_SECRET_KEY
 
 
 def send_plain_email(subject, body, to=None, multi=False):
+    """Send a plain-text email to `to` (comma-separated) or, if not given, the first EMAIL_TO address.
+
+    Falls back to Mailjet if SMTP fails; raises if both fail so callers know the email was not sent.
+    """
+    recipients = to or settings.EMAIL_TO.split(',')[0]
     msg = MIMEMultipart()
     msg["From"] = email_from
-    if to:
-        msg["To"] = to
-    else:
-        email_to = settings.EMAIL_TO
-        email_to = email_to.split(',')[0]
-        msg["To"] = email_to
+    msg["To"] = recipients
     msg["Subject"] = subject
     msg.preamble = subject
     textpart = MIMEText(body, 'plain')
 
     msg.attach(textpart)
 
-    server = smtplib.SMTP("{}:{}".format(smtp_server, smtp_port))
-    server.starttls()
-    server.login(username, password)
-    server.sendmail(email_from, email_to.split(","), msg.as_string())
-    logging.info('***************************************************')
-    logging.info('Email Successfully Sent to {} .'
-        'subject={}, body={}'.format(email_to, subject, body))
-    logging.info('***************************************************')
-    server.quit()
+    try:
+        server = smtplib.SMTP("{}:{}".format(smtp_server, smtp_port))
+        server.starttls()
+        server.login(username, password)
+        server.sendmail(email_from, recipients.split(","), msg.as_string())
+        logging.info('Plain email successfully sent via SMTP to {}. subject={}'.format(recipients, subject))
+        server.quit()
+        return
+    except OSError:
+        logging.exception('Sending plain email with smtp failed. Trying with mailjet')
+
+    send_email_mailjet_plain(subject, body, recipients)
+    logging.info('Plain email successfully sent via Mailjet to {}. subject={}'.format(recipients, subject))
+
+
+def send_email_mailjet_plain(subject, body, recipients):
+    mailjet = Client(auth=(mailjet_api_key, mailjet_secret_key), version='v3.1')
+    data = {
+        'Messages': [
+            {
+                "From": {"Email": email_from},
+                "To": [{"Email": i} for i in recipients.split(',')],
+                "Subject": subject,
+                "TextPart": body,
+            }
+        ]
+    }
+    result = mailjet.send.create(data=data)
+    if result.status_code != 200:
+        raise RuntimeError("Mailjet send failed: status={}".format(result.status_code))
 
 
 
