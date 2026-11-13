@@ -27,15 +27,19 @@ class AlljobsScraper(object):
     def __init__(self, log, url=None):
         self.log = log
         self.url = url
-        display = Display(visible=0, size=(800, 800))
-        display.start()
+        self.display = Display(visible=0, size=(800, 800))
+        self.display.start()
         self.screenshot_dir = 'alljobs_screenshots'
         self.html_dir = 'alljobs_htmls_test'
         if not os.path.exists(self.screenshot_dir):
             os.mkdir(self.screenshot_dir)
         if not os.path.exists(self.html_dir):
-            os.mkdir(self.html_dir)            
-        self.init_driver()
+            os.mkdir(self.html_dir)
+        try:
+            self.init_driver()
+        except Exception:
+            self.close()  # don't leak Xvfb if Chrome fails to start
+            raise
 
     def init_driver(self):
         self.close_driver()
@@ -83,7 +87,7 @@ class AlljobsScraper(object):
         try:
             self.driver.get(url)
         except:
-            self.init_driver(url)
+            self.init_driver()
             self.driver.get(url)
 
         time.sleep(random.randint(3, 6))
@@ -142,8 +146,16 @@ class AlljobsScraper(object):
             self.log.exception("Failed to save screenshot %s", screenshot_file)
 
     def close_driver(self):
+        # quit() ends chromedriver and the whole Chrome process tree; close() only closes the window
         try:
-            self.driver.close()
+            self.driver.quit()
+        except:
+            pass
+
+    def close(self):
+        self.close_driver()
+        try:
+            self.display.stop()
         except:
             pass
 
