@@ -151,8 +151,9 @@ class DrushimSpider(scrapy.Spider):
                 continue
 
             self.seen_job_ids.add(job_id)
-            job_description = job.get('JobContent', {}).get('Description', '')
-            job_requirement = job.get('JobContent', {}).get('Requirements', '')
+            # API returns null for missing fields, so .get() defaults don't apply
+            job_description = job.get('JobContent', {}).get('Description') or ''
+            job_requirement = job.get('JobContent', {}).get('Requirements') or ''
 
             try:
                 job_post_date = parse(job.get('JobInfo', {}).get('Date', ''))
