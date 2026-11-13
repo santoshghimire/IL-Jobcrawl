@@ -33,6 +33,10 @@ class AllJobsSpider(scrapy.Spider):
         self.total_jobs = 0
         self.max_page = 1500
 
+    def closed(self, reason):
+        # Called by scrapy when the spider closes; stop Chrome and Xvfb so they don't outlive the run
+        self.runner.close()
+
     def should_end_run(self, page, endpage_scraped=False):
         text = 'scraped' if endpage_scraped else 'not scraped'
         if reached_endtime():
