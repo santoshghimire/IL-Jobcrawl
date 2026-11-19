@@ -13,6 +13,11 @@ from scrapy.http import HtmlResponse
 from jobcrawl.alljobs_selenium import AlljobsScraper
 from jobcrawl.endtime_check import reached_endtime
 
+# After ~20-25 pages the site serves its bot-protection page ("Verifying your browser before proceeding...")
+# instead of results, for anywhere from 30 minutes to the rest of the run.
+BLOCK_PAGE_MARK = '<title>Radware Page</title>'
+BLOCK_PAUSES = [10, 20, 30]  # minutes to pause after consecutive blocked pages; the last one repeats
+
 
 class AllJobsSpider(scrapy.Spider):
     """ Spider to scrape job information from site http://www.alljobs.co.il """
@@ -32,6 +37,7 @@ class AllJobsSpider(scrapy.Spider):
         self.runner = AlljobsScraper(self.logger)
         self.total_jobs = 0
         self.max_page = 1500
+        self.blocks = 0  # consecutive blocked pages
 
     def closed(self, reason):
         # Called by scrapy when the spider closes; stop Chrome and Xvfb so they don't outlive the run
@@ -45,6 +51,20 @@ class AllJobsSpider(scrapy.Spider):
         elif self.reached_maxpage(page):
             self.logger.error("Alljobs: Reached max page. Ending run. End page (%s) = %s, total_jobs=%s", text, page, self.total_jobs)
             return True
+        return False
+
+    def pause_for_block(self, page):
+        """Back off while the site's bot protection is blocking us, instead of retrying every minute and
+        skipping the pages it blocks. Returns True if the run should end (endtime reached)."""
+        minutes = BLOCK_PAUSES[min(self.blocks, len(BLOCK_PAUSES) - 1)]
+        self.blocks += 1
+        self.logger.error("Alljobs: blocked by the site's bot protection on page=%s (%s in a row). "
+                          "Pausing %s min before retrying it, total_jobs=%s", page, self.blocks, minutes, self.total_jobs)
+        resume = time.time() + minutes * 60
+        while time.time() < resume:
+            if self.should_end_run(page):
+                return True
+            time.sleep(30)
         return False
 
     def reached_maxpage(self, page):
@@ -239,12 +259,20 @@ class AllJobsSpider(scrapy.Spider):
                 self.total_jobs += 1
                 yield item
 
+            if not page_job_count and BLOCK_PAGE_MARK in body:
+                if self.pause_for_block(page):
+                    break
+                # retry the same page with a fresh set of attempts, rather than moving on and losing it
+                yield scrapy.Request(url, self.parse, dont_filter=True)
+                return
+
             if not page_job_count:
                 self.logger.error("Alljobs: 0 jobs scraped on current page=%s. url=%s, total_jobs=%s, attempt=%s, remaining=%s", page, url, self.total_jobs, attempt, 4 - attempt)
                 if self.should_end_run(page, endpage_scraped=False):
                     break
                 continue
 
+            self.blocks = 0
             self.logger.info("Alljobs: Page %s job count = %s, total_jobs=%s", page, page_job_count, self.total_jobs)
             next_page = response.xpath('//div[@class="jobs-paging-next"]/a/@href').extract_first()
             if next_page:

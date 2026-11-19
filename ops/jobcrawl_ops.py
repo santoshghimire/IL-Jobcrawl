@@ -28,6 +28,7 @@ import os
 import re
 import shutil
 import signal
+import statistics
 import subprocess
 import sys
 import time
@@ -50,7 +51,9 @@ SPIDERS = {
 }
 REPORT_SPIDER = 'left'  # builds the per-site Excel files into the daily email at 12:45 UTC
 SPIDER_FILES = {'left_company_check': 'left'}  # spider module name -> spider name, where they differ
-LOW_RATIO = 0.5  # flag a day with fewer than half of the reference day's jobs
+LOW_RATIO = 0.5  # flag a day with fewer than half of the reference count
+REFERENCE_DAYS = 7  # the reference count is the median of this many previous days
+STARTUP_GRACE = 30  # seconds a rerun must stay up (or finish cleanly) to count as started
 AUTO_RERUNS = 1  # reruns `check` may start per spider per day
 MAX_RERUNS = 2  # reruns allowed per spider per day, including ones requested via `rerun`
 DISK_LIMIT = 0.85
@@ -61,6 +64,9 @@ KNOWN_CAUSES = [
     (r'XStartTimeoutError', 'Xvfb did not start - leftover Xvfb/Chrome processes on the host?'),
     (r'status code 4\d\d|status=4\d\d|\(4\d\d\) <GET', 'Site returned HTTP 4xx - URL or API may have changed'),
     (r'Found 0 listing links', 'No listing links on the homepage - site layout may have changed'),
+    (r'No route to host|Connection refused|DNS lookup failed|ConnectError|TCPTimedOutError',
+     'Network error reaching the site - an outage, not a site change'),
+    (r"blocked by the site's bot protection", "The site's bot protection blocked the crawler for part of the run"),
     (r'OperationalError|Access denied|Can\'t connect to MySQL', 'Database connection problem'),
     (r'End run because endtime is reached|Reached Endtime', 'Run hit the daily endtime cutoff'),
     (r'TimeoutException|timed out', 'Page loads timing out - site slow or blocking'),
@@ -116,13 +122,15 @@ def db_counts(days=8):
 
 
 def reference_count(counts, site, day):
-    """Yesterday's count, or the most recent earlier non-zero day if yesterday saved nothing."""
-    for back in range(1, 8):
-        d = day - dt.timedelta(days=back)
-        n = counts.get(d, {}).get(site, 0)
-        if n:
-            return {'date': str(d), 'jobs': n}
-    return None
+    """Median of the non-zero counts of the last REFERENCE_DAYS days.
+
+    A median, not yesterday: after one bad day, a second bad day would otherwise look normal."""
+    days = [day - dt.timedelta(days=back) for back in range(1, REFERENCE_DAYS + 1)]
+    values = [n for n in (counts.get(d, {}).get(site, 0) for d in days) if n]
+    if not values:
+        return None
+    return {'jobs': int(statistics.median(values)), 'days': len(values),
+            'label': '{}-day median'.format(REFERENCE_DAYS)}
 
 
 def log_path(day):
@@ -262,14 +270,32 @@ def rerun_count(day, name):
 
 
 def start_spider(name, day):
-    """Start a spider detached, the same way cron does, and count the rerun."""
-    with open(LOG_DIR / 'cron_{}.log'.format(name), 'ab') as log:
-        subprocess.Popen([str(SCRAPY), 'crawl', name], cwd=str(APP_DIR), stdin=subprocess.DEVNULL,
-                         stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+    """Start a spider detached, the same way cron does, count the rerun, and confirm it got going.
+
+    Returns None if the spider is running (or already finished cleanly), else a short error. Its console
+    output goes to $OPS_HOME/reruns/, not logs/, because the report spider deletes stray files in logs/."""
+    # Loading Scrapy settings for the DB check put SCRAPY_SETTINGS_MODULE in this process's environment.
+    # Inherited, it stops the child scrapy from putting the project on sys.path ("No module named 'jobcrawl'").
+    env = {k: v for k, v in os.environ.items() if not k.startswith('SCRAPY_')}
+    out = OPS_HOME / 'reruns' / '{}-{}.log'.format(day, name)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with open(out, 'ab') as log:
+        log.write('--- {} rerun of {}\n'.format(utcnow().isoformat(), name).encode())
+        log.flush()
+        proc = subprocess.Popen([str(SCRAPY), 'crawl', name], cwd=str(APP_DIR), env=env, stdin=subprocess.DEVNULL,
+                                stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
     state = load_json(OPS_HOME / 'reruns.json', {})
     state = {d: v for d, v in state.items() if d >= str(day - dt.timedelta(days=KEEP_DAYS))}
     state.setdefault(str(day), {})[name] = state.get(str(day), {}).get(name, 0) + 1
     save_json(OPS_HOME / 'reruns.json', state)
+    try:
+        rc = proc.wait(timeout=STARTUP_GRACE)
+    except subprocess.TimeoutExpired:
+        return None  # still running
+    if rc == 0:
+        return None  # a quick run that finished; the next check judges its result
+    last = [l for l in out.read_text(errors='replace').splitlines() if l.strip()][-1:]
+    return 'rerun exited during startup (exit code {}): {}'.format(rc, last[0][:200] if last else 'no output')
 
 
 def rerun_blocker(name, day, limit):
@@ -301,15 +327,14 @@ def diagnose(name, sruns, items_today, ref):
         if r['errors']:
             notes.append('top errors: ' + '; '.join('{}x {}'.format(n, msg) for msg, n in r['errors'].most_common(3)))
         text_blob += r['exceptions'] + r['error_lines']
-    if sruns and sruns[-1]['closed'] == 'finished' and not sruns[-1]['items']:
-        notes.append('likely cause: spider finished without scraping anything - selectors/API may have changed')
     blob = '\n'.join(text_blob)
-    for pattern, cause in KNOWN_CAUSES:
-        if re.search(pattern, blob):
-            notes.append('likely cause: ' + cause)
+    causes = ['likely cause: ' + cause for pattern, cause in KNOWN_CAUSES if re.search(pattern, blob)]
+    if not causes and sruns and sruns[-1]['closed'] == 'finished' and not sruns[-1]['items']:
+        causes.append('likely cause: spider finished without scraping anything - selectors/API may have changed')
+    notes += causes
     if ref and items_today and items_today < LOW_RATIO * ref['jobs']:
-        notes.append('saved {} jobs vs {} on {} ({:.0%})'.format(items_today, ref['jobs'], ref['date'],
-                                                                 items_today / ref['jobs']))
+        notes.append('saved {} jobs vs {} {} ({:.0%})'.format(items_today, ref['label'], ref['jobs'],
+                                                             items_today / ref['jobs']))
     return notes
 
 
@@ -334,7 +359,7 @@ def evaluate(name, cfg, runs, counts, day):
         if items_today == 0:
             res['issues'].append('0 jobs saved today')
         elif ref and items_today < LOW_RATIO * ref['jobs']:
-            res['issues'].append('suspiciously low: {} jobs vs {} on {}'.format(items_today, ref['jobs'], ref['date']))
+            res['issues'].append('suspiciously low: {} jobs vs {} {}'.format(items_today, ref['label'], ref['jobs']))
         # handled exceptions (logger.exception + retry) are normal; these mean the run itself broke
         if any(r['critical'] or r['spider_errors'] for r in sruns):
             res['issues'].append('crashed: unhandled exception in the spider')
@@ -389,7 +414,7 @@ def cmd_check(args):
         actions.append(('would ' if dry else '') + desc)
         say(actions[-1])
         if not dry:
-            fn(*a)
+            return fn(*a)
 
     # hung runs first, so they are evaluated as failed below
     for name in names:
@@ -427,15 +452,22 @@ def cmd_check(args):
         else:
             blocker = 'partial run - rerun would repeat it'
         if not blocker:
-            act('rerun {} ({})'.format(name, '; '.join(res['issues'])), start_spider, name, day)
-            res['rerun_started'] = not dry
-            continue
-        res['rerun_blocked'] = blocker
-        if rerun_count(day, name):
-            res['issues'].append('still failing after {} rerun(s) today'.format(rerun_count(day, name)))
+            error = act('rerun {} ({})'.format(name, '; '.join(res['issues'])), start_spider, name, day)
+            if not error:
+                res['rerun_started'] = not dry
+                continue
+            say('    ' + error)
+            res['rerun_failed'] = error
+            res['issues'].append('automatic rerun failed')
+            note = 'rerun failed: {} (output in ~/jobcrawl-ops/reruns/)'.format(error)
+        else:
+            res['rerun_blocked'] = blocker
+            if rerun_count(day, name):
+                res['issues'].append('still failing after {} rerun(s) today'.format(rerun_count(day, name)))
+            note = 'no rerun: ' + blocker
         title = '{}: {}'.format(name, '; '.join(res['issues']))
         if not dry:
-            queue_attention('{}:{}'.format(day, name), 'issue', title, res['diagnosis'] + ['no rerun: ' + blocker])
+            queue_attention('{}:{}'.format(day, name), 'issue', title, res['diagnosis'] + [note])
 
     report = None
     if checkpoint == 'final':
@@ -576,7 +608,9 @@ def cmd_rerun(args):
     blocker = rerun_blocker(args.spider, day, MAX_RERUNS)
     if blocker:
         sys.exit('not rerunning {}: {}'.format(args.spider, blocker))
-    start_spider(args.spider, day)
+    error = start_spider(args.spider, day)
+    if error:
+        sys.exit('{}: {} (output in ~/jobcrawl-ops/reruns/)'.format(args.spider, error))
     say('started {} (rerun {} of {} today)'.format(args.spider, rerun_count(day, args.spider), MAX_RERUNS))
 
 
